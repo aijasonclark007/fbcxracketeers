@@ -298,12 +298,25 @@
 
       try {
         // URL-encoded body is a "simple" request, so the browser skips the CORS preflight that Apps Script can't answer
-        const res = await fetch(ENDPOINT, {
-          method: 'POST',
-          body: new URLSearchParams({ name: data.name.trim(), email: data.email.trim(), phone: data.phone.trim(), skill: data.skill })
+        // The same id is sent on every retry so the server can ignore duplicates
+        const body = new URLSearchParams({
+          sid: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+          name: data.name.trim(), email: data.email.trim(), phone: data.phone.trim(), skill: data.skill
         });
-        const out = await res.json();
-        if (out.result !== 'success') throw new Error(out.message || 'Script error');
+        let lastErr = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            const res = await fetch(ENDPOINT, { method: 'POST', body });
+            const out = await res.json();
+            if (out.result !== 'success') throw new Error(out.message || 'Script error');
+            lastErr = null;
+            break;
+          } catch (err) {
+            lastErr = err;
+            if (attempt < 2) await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+          }
+        }
+        if (lastErr) throw lastErr;
       } catch (err) {
         console.error('Registration failed:', err);
         submitErr.textContent = "Your registration didn't go through (" + (err && err.message ? err.message : err) + "). Check your connection and try again.";
