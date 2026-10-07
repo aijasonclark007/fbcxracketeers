@@ -1204,14 +1204,21 @@ function pubBody(web) {
     const bs = sched.brackets.filter(b => b.level === l);
     if (bs.length) h += '<p>' + lvl(l) + '</p><div class="brk">' + bs.map(b => '<div class="bk"><b>' + esc(b.name) + '</b><ol>' + b.teams.map(t => '<li>' + esc(t.name) + '</li>').join('') + '</ol></div>').join('') + '</div>';
   });
-  if (ko && koSched) {
-    const rs = resolveKnockout(ko, committed(koResults)), by = {}, slots = {}, kd = committed(koResults);
-    rs.matches.forEach(m => { by[m.id] = m; });
-    koSched.matches.forEach(x => { (slots[x.slot] = slots[x.slot] || []).push(x); });
-    h += '<h2>Knockout round</h2>';
-    Object.keys(slots).sort((a, b) => a - b).forEach(k => {
-      h += '<div class="slot"><h3>' + slots[k][0].start + ' - ' + slots[k][0].end + '</h3>' +
-        slots[k].map(x => row(Object.assign({}, by[x.id], { bracket: by[x.id].roundName }), x.courtName, kd[x.id])).join('') + '</div>';
+  // knockout: real teams once it has been created, otherwise the times and courts with "To be decided"
+  const real = !!(ko && koSched);
+  let k = ko, ks = koSched;
+  if (!real) {
+    k = buildKnockout(sched.brackets, computeStandings(sched.brackets, sched.matches, {}, { coin }), Object.assign({ coin }, gopt));
+    ks = scheduleKnockout(k, sched.summary.slotsUsed, gopt);
+  }
+  if (k.matches.length) {
+    const kd = real ? committed(koResults) : {}, rs = resolveKnockout(k, kd), by = {}, slots = {};
+    rs.matches.forEach(m => { by[m.id] = real ? m : Object.assign({}, m, { team1: null, team2: null }); });
+    ks.matches.forEach(x => { (slots[x.slot] = slots[x.slot] || []).push(x); });
+    h += '<h2>Knockout round</h2>' + (real ? '' : '<p class="upd">The teams will be known after the group games. The times and courts below are already set.</p>');
+    Object.keys(slots).sort((a, b) => a - b).forEach(n => {
+      h += '<div class="slot"><h3>' + slots[n][0].start + ' - ' + slots[n][0].end + '</h3>' +
+        slots[n].map(x => row(Object.assign({}, by[x.id], { bracket: by[x.id].roundName }), x.courtName, kd[x.id])).join('') + '</div>';
     });
   }
   return h + '</div>';
