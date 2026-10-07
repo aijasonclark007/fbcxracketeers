@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Draw & Schedule – FBC x Racketeers Badminton Tournament</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4F6FB;--card:#fff;--ink:#0B1B33;--mute:#5A6A82;--line:#D5DCE8;--navy:#0A2547;--lime:#8DC63F;--sun:#FFC20E;--chip:#EAF0F9;--ok:#2E7D32;--warn:#B26A00;--bad:#B3261E;
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0A1426;--card:#111F38;--ink:#E8EEF8;--mute:#9FB0C9;--line:#26385A;--chip:#1A2C4C;--ok:#7BD07F;--warn:#F2B04A;--bad:#FF8A80}}
+:root[data-theme="dark"]{--bg:#0A1426;--card:#111F38;--ink:#E8EEF8;--mute:#9FB0C9;--line:#26385A;--chip:#1A2C4C;--ok:#7BD07F;--warn:#F2B04A;--bad:#FF8A80}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "DM Sans",system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 64px}
+h1,h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.02em;margin:0}
+h1{font-size:clamp(28px,6vw,44px);line-height:1.05}
+h2{font-size:22px}
+.sub{color:var(--mute);margin:6px 0 0;max-width:60ch}
+section{margin-top:28px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg);color:var(--ink);font:15px/1.5 ui-monospace,Menlo,monospace}
+label{font-size:14px;color:var(--mute)}
+input[type=number],input[type=time]{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg);color:var(--ink);font:inherit;width:100%}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-top:12px}
+.row>div{min-width:110px}
+button{font:inherit;font-weight:700;border:0;border-radius:999px;padding:11px 20px;cursor:pointer;background:var(--navy);color:#fff}
+button.go{background:var(--lime);color:#0B1B33}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,.pl:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.bh{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.bh .n{color:var(--mute);font-size:14px;margin-right:auto}
+.mv{padding:5px 12px;font-size:13px;background:var(--sun);color:#0B1B33}
+.team{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px;border:1px solid var(--line);border-radius:12px;margin-top:8px}
+.team.on{border-color:var(--sun);box-shadow:0 0 0 2px var(--sun)}
+.pl{background:var(--chip);border-radius:999px;padding:4px 12px;font-size:14px}
+.pl.ed{cursor:pointer}.pl.on{background:var(--sun);color:#0B1B33;font-weight:700}
+.tm{padding:3px 10px;font-size:13px;background:var(--chip);color:var(--ink)}
+.hint{min-height:24px;font-size:14px;color:var(--mute)}.hint.err{color:var(--bad)}
+.tag{display:inline-block;padding:3px 12px;border-radius:999px;font-weight:700;font-size:14px;border:1px solid currentColor}
+.ON_TIME{color:var(--ok)}.NEEDS_EXTENSION{color:var(--warn)}.EXCEEDS_LIMIT{color:var(--bad)}
+.warn{color:var(--warn);font-size:14px;margin:4px 0 0}
+.wrap{overflow-x:auto;margin-top:12px;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;font-size:14px}
+th{background:var(--navy);color:#fff;position:sticky;top:0}
+td.t{white-space:nowrap;font-weight:700}
+tr.rest td{color:var(--mute);font-style:italic}
+.g i{color:var(--mute);margin:0 6px;font-style:normal}
+.br{display:block;font-size:12px;color:var(--mute)}
+.sc{width:58px;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;text-align:center}
+.mt{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 0}.mt span{flex:1}
+.adv td{background:rgba(141,198,63,.18)}.win{font-weight:700;color:var(--ok)}
+.lvl{font:800 22px/1.2 "Bricolage Grotesque",system-ui,sans-serif;margin:26px 0 12px;padding-left:12px;border-left:5px solid var(--lime)}
+.mh{display:grid;grid-template-columns:minmax(150px,1fr) auto auto auto minmax(150px,1fr);gap:8px;align-items:center}
+.mh .l{text-align:right}.mh i{color:var(--mute);font-style:normal;font-size:13px}
+tr.first td{border-top:2px solid var(--line)}
+.nw{white-space:nowrap}
+.mh{grid-template-columns:minmax(150px,1fr) auto auto auto minmax(150px,1fr) auto!important}
+.sv{padding:5px 16px;font-size:13px;background:var(--lime);color:#0B1B33}
+.sv.ed{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.sv:disabled{opacity:.4;cursor:default}.sc:disabled{opacity:.7}
+.test{border:1px dashed var(--mute)}.tools{display:flex;gap:10px;flex-wrap:wrap}
+.kwrap{padding:14px;margin-top:0}
+.kchart{position:relative;color:var(--mute)}
+.kcolh{position:absolute;top:0;width:250px;text-align:center;font-weight:700;font-size:13px;padding:4px;background:var(--chip);border-radius:6px;color:var(--ink)}
+.kb{position:absolute;width:250px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:var(--ink)}
+.kh{height:18px;font-size:11px;line-height:18px;color:var(--mute);padding:0 8px;background:var(--chip)}
+.kr{display:flex;align-items:center;gap:6px;height:30px;padding-right:5px;border-top:1px solid var(--line);font-size:13px}
+.kr .sd{width:24px;align-self:stretch;display:flex;align-items:center;justify-content:center;background:var(--chip);color:var(--mute);font-size:12px}
+.kr .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kr .sc{width:44px;padding:2px 4px;font-size:13px}
+.kr em{font-style:normal;font-size:10px;font-weight:700;background:var(--sun);color:#0B1B33;border-radius:6px;padding:0 5px;margin-left:4px}
+.kr.win .nm{font-weight:700}.kr.win .sc{background:#F08A3C;border-color:#F08A3C;color:#0B1B33;font-weight:700}
+.kb .sv{display:block;width:100%;border-radius:0;padding:4px;font-size:12px}
+.champ{position:absolute;width:150px;padding:8px 10px;border:2px solid var(--lime);border-radius:10px;background:var(--card);color:var(--ink);font-size:13px}
+.lockbtn{background:var(--lime)!important;color:#0B1B33!important;border:0!important}
+.lockbtn.ed{background:transparent!important;color:var(--ink)!important;border:1px solid var(--line)!important}
+.lockbtn:disabled,.sv:disabled{opacity:.4}
+input[type=text]{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg);color:var(--ink);font:inherit}
+details{margin-top:10px}summary{cursor:pointer;color:var(--mute)}
+.hidden{display:none}
+@media print{.noprint{display:none!important}body{background:#fff;color:#000}th{background:#ddd;color:#000}}
+</style>
+</head>
+<body>
+<main>
+  <header class="noprint">
+    <h1>Draw &amp; Schedule</h1>
+    <p class="sub">FBC x Racketeers Badminton Tournament. Pair players at random, adjust the teams by hand if you need to, then build the game schedule.</p>
+  </header>
+
+  <section class="noprint" id="tpanel">
+    <h2>Tournaments</h2>
+    <div class="card" style="margin-top:12px">
+      <p class="hint" style="margin:0 0 10px">Your work saves by itself on this device, so closing the browser does not lose it. Open any tournament below to continue where you left off.</p>
+      <div class="wrap" style="margin:0"><table id="tlist" style="min-width:560px"></table></div>
+      <div class="row">
+        <div style="flex:1;min-width:220px"><label for="tname">Tournament name</label><input id="tname" type="text" placeholder="e.g. November 8 Tournament"></div>
+        <button id="tNew" class="go" type="button">Create new</button>
+        <button id="tRename" class="ghost" type="button">Rename current</button>
+      </div>
+      <p id="saveNote" class="hint"></p>
+      <details><summary>Backup and restore</summary>
+        <p class="hint">Copy the backup text somewhere safe (for example a note or an email to yourself). Paste it back here to restore it, even on another device.</p>
+        <textarea id="backup" style="min-height:90px" placeholder="Backup text appears here"></textarea>
+        <div class="row"><button id="bShow" class="ghost" type="button">Show backup of this tournament</button><button id="bLoad" class="ghost" type="button">Restore from the text above</button></div>
+        <p id="bMsg" class="hint"></p>
+      </details>
+    </div>
+  </section>
+
+  <section class="noprint" id="secAdd">
+    <div class="bar"><h2>1. Add players</h2><button class="ghost lockbtn" data-lock="add" type="button">Save</button></div>
+    <div class="card" style="margin-top:12px">
+      <label for="players">One player per line: name, level (High, Mid or Low)</label>
+      <textarea id="players" placeholder="Ana Reyes, High&#10;Ben Cruz, Mid"></textarea>
+      <div class="row">
+        <div><label for="courts">Number of courts</label><input id="courts" type="number" min="1" max="12" value="4"></div>
+        <div><label for="firstCourt">First court no.</label><input id="firstCourt" type="number" min="1" max="99" value="7"></div>
+        <div><label for="start">First game</label><input id="start" type="time" value="14:00"></div>
+        <button id="drawBtn" class="go">Pair players</button>
+        <button id="sample" class="ghost" type="button">Load 88 sample players</button>
+      </div>
+      <p id="loadMsg" class="hint"></p>
+    </div>
+  </section>
+
+  <div id="drawSec" class="hidden noprint">
+    <section id="secTeams">
+      <div class="bar"><h2>2. Teams</h2>
+        <div class="tools"><button class="ghost lockbtn" data-lock="teams" type="button">Save</button>
+          <label style="display:flex;gap:6px;align-items:center;color:var(--ink)"><input id="manualTeams" type="checkbox"> Re-organize teams manually</label>
+          <button id="shuffleTeams" class="ghost" type="button">Shuffle teams</button>
+        </div></div>
+      <p id="hintT" class="hint"></p>
+      <div id="unpaired"></div>
+      <div id="teams"></div>
+    </section>
+    <section id="secBrackets">
+      <div class="bar"><h2>3. Brackets</h2>
+        <div class="tools"><button class="ghost lockbtn" data-lock="brackets" type="button">Save</button>
+          <label style="display:flex;gap:6px;align-items:center;color:var(--ink)"><input id="manualBrackets" type="checkbox"> Re-organize brackets manually</label>
+          <button id="shuffleBrackets" class="ghost" type="button">Shuffle brackets</button>
+          <button id="genBtn" class="go" type="button">Build schedule</button>
+        </div></div>
+      <p id="hintB" class="hint"></p>
+      <div id="brackets"></div>
+    </section>
+  </div>
+
+  <section id="schedSec" class="hidden">
+    <div class="bar">
+      <h2>4. Game schedule</h2>
+      <button id="print" class="ghost noprint" type="button">Print</button>
+    </div>
+    <div id="summary"></div>
+    <p id="gMsg" class="hint"></p>
+    <div class="wrap"><table id="table"></table></div>
+  </section>
+  <section id="standSec" class="hidden">
+    <div class="bar noprint"><h2>5. Standings</h2>
+      <div class="tools"><button id="randGroup" class="ghost test" type="button">Fill random scores (test)</button><button id="clearScores" class="ghost" type="button">Clear all scores</button></div></div>
+    <p class="hint">Type each game's score in the schedule above. Teams are ranked by match wins, then total points scored, then head-to-head. The top 2 of each bracket advance.</p>
+    <div id="standings"></div>
+    <div class="bar noprint" style="margin-top:16px"><span id="koHint" class="hint"></span><button id="koBtn" class="go" type="button">Create knockout round</button></div>
+  </section>
+
+  <section id="koSec" class="hidden">
+    <div class="bar noprint"><h2>6. Knockout round</h2>
+      <div class="tools"><button id="randKo" class="ghost test" type="button">Fill random knockout scores (test)</button></div></div>
+    <p class="hint">Single elimination: a team that loses is out. Semifinal losers share 3rd place.</p>
+    <div id="koSummary"></div>
+    <p id="kMsg" class="hint"></p>
+    <div id="champs" class="grid" style="margin:12px 0"></div>
+    <p class="hint">The teams with the most wins and points score the best seeds. When the field is not 4, 8 or 16 teams, the top seeds get a BYE and go straight to the next round.</p>
+    <div id="koCharts"></div>
+    <h3 class="lvl">Knockout schedule</h3>
+    <div class="wrap"><table id="koTable"></table></div>
+  </section>
+</main>
+
+<script>
+/**
+ * Badminton tournament draw + schedule generator
+ * ----------------------------------------------
+ * Step 1  createDraw(players)        blind pairing + brackets (random)
+ * Step 2  draw.swapPlayers / swapTeams / moveTeam      OPTIONAL manual re-organizing
+ * Step 3  draw.generate()            round-robin games placed on courts and time slots
+ *
+ * Rules the schedule follows:
+ *   - Teams of 2, blind-paired inside their own skill level (High, Mid, Low).
+ *   - Brackets of up to 4 teams; every team plays every other team in its bracket once.
+ *   - 4 courts, 20-minute slots from 2:00 PM; nobody plays two games in one slot and
+ *     nobody plays in back-to-back slots (at least one slot of rest).
+ *
+ * Works in the browser (global functions) and in Node (require).
+ *
+ * Input: an array of registrations. Each item is either
+ *   - an individual:  { name: 'Juan Dela Cruz', skill: 'High' }          (blind-paired for you)
+ *   - a ready team:   { name: 'Team A', skill: 'Mid', players: ['Ana', 'Ben'] }
+ * Player names must be unique.
+ *
+ * Quick use (no manual changes):
+ *   const result = generateSchedule(players, { seed: 2026 });
+ *
+ * With manual re-organizing:
+ *   const draw = createDraw(players, { seed: 2026 });
+ *   const state = draw.getState();                 // show state.brackets and state.unpaired to the organizer
+ *   draw.swapPlayers('Ana', 'Ben');                // swap two players (same level) between teams
+ *   draw.swapTeams('T1', 'T5');                    // swap two teams between brackets (same level)
+ *   draw.moveTeam('T3', 'High-B');                 // move a team into another bracket (same level)
+ *   const result = draw.generate();                // build the schedule from the edited draw
+ *   const saved = draw.toJSON();                   // save the edited draw (e.g. to your Sheet)
+ *   generateScheduleFromBrackets(saved.brackets);  // rebuild the same schedule later
+ */
+function createDraw(registrations, options) {
+  const opt = withDefaults(options);
+  const skipped = [];
+  const warnings = [];
+  let rand = makeRng(opt.seed);
+  let teams = [], unpaired = [], brackets = [], nextTeamId = 1;
+
+  // ----- sort registrations into levels (done once) -----
+  const pools = {};
+  opt.levels.forEach(l => { pools[l] = { singles: [], teams: [] }; });
+  const seen = new Set();
+  (registrations || []).forEach(reg => {
+    const level = opt.levels.find(l => l.toLowerCase() === String((reg && reg.skill) || '').trim().toLowerCase());
+    if (!level) { skipped.push({ entry: reg, reason: 'Unknown skill level' }); return; }
+    const names = Array.isArray(reg.players) && reg.players.length ? reg.players.map(String) : (reg.name ? [String(reg.name).trim()] : []);
+    if (!names.length) { skipped.push({ entry: reg, reason: 'Missing name' }); return; }
+    names.forEach(n => { if (seen.has(keyOf(n))) warnings.push('Duplicate player name: ' + n + '. Names must be unique.'); seen.add(keyOf(n)); });
+    if (names.length > 1 || (Array.isArray(reg.players) && reg.players.length)) {
+      pools[level].teams.push({ name: reg.name || names.join(' / '), players: names, level, auto: !reg.name });
+    } else {
+      pools[level].singles.push({ name: names[0], level });
+    }
+  });
+
+  // ----- step 1: blind pairing + brackets -----
+  function pairAll() {
+    teams = []; unpaired = []; nextTeamId = 1;
+    opt.levels.forEach(level => {
+      const pool = shuffle(pools[level].singles, rand);
+      for (let i = 0; i + 1 < pool.length; i += 2) {
+        teams.push(newTeam([pool[i].name, pool[i + 1].name], level, null));
+      }
+      if (pool.length % 2) unpaired.push(pool[pool.length - 1]);
+      pools[level].teams.forEach(t => teams.push(newTeam(t.players.slice(), level, t.auto ? null : t.name)));
+    });
+  }
+  function makeBrackets() {
+    brackets = [];
+    opt.levels.forEach(level => {
+      const levelTeams = shuffle(teams.filter(t => t.level === level), rand);
+      const n = levelTeams.length;
+      if (!n) return;
+      const count = Math.ceil(n / opt.bracketSize), base = Math.floor(n / count), extra = n % count;
+      let pos = 0;
+      for (let b = 0; b < count; b++) {
+        const size = base + (b < extra ? 1 : 0), letter = String.fromCharCode(65 + b);
+        brackets.push({ id: level + '-' + letter, name: level + ' Bracket ' + letter, level, teams: levelTeams.slice(pos, pos + size) });
+        pos += size;
+      }
+    });
+  }
+  function shuffleAll() { pairAll(); makeBrackets(); }
+  function newTeam(players, level, customName) {
+    return { id: 'T' + (nextTeamId++), name: customName || players.join(' / '), custom: !!customName, players, level };
+  }
+  function refreshName(t) { if (!t.custom) t.name = t.players.join(' / '); }
+  shuffleAll();
+
+  // ----- step 2: manual re-organizing -----
+  function locatePlayer(name) {
+    const k = keyOf(name);
+    for (const t of teams) {
+      const i = t.players.findIndex(p => keyOf(p) === k);
+      if (i >= 0) return { name: t.players[i], level: t.level, team: t, set(v) { t.players[i] = v; refreshName(t); } };
+    }
+    const j = unpaired.findIndex(p => keyOf(p.name) === k);
+    if (j >= 0) return { name: unpaired[j].name, level: unpaired[j].level, team: null, set(v) { unpaired[j].name = v; } };
+    throw new Error('Player not found: ' + name);
+  }
+  function findTeam(id) {
+    const t = teams.find(x => x.id === id);
+    if (!t) throw new Error('Team not found: ' + id);
+    return t;
+  }
+  function bracketOf(team) { return brackets.find(b => b.teams.includes(team)); }
+
+  const api = {
+    /** Swap two players (both in the same skill level). Either one may be an unpaired player. */
+    swapPlayers(a, b) {
+      const A = locatePlayer(a), B = locatePlayer(b);
+      if (A.level !== B.level) throw new Error('Players must be in the same skill level');
+      if (A.team && A.team === B.team) throw new Error(A.name + ' and ' + B.name + ' are already partners');
+      const nameA = A.name, nameB = B.name;
+      A.set(nameB); B.set(nameA);
+      return api;
+    },
+    /** Swap two teams between their brackets (same skill level). */
+    swapTeams(idA, idB) {
+      const A = findTeam(idA), B = findTeam(idB);
+      if (A.level !== B.level) throw new Error('Teams must be in the same skill level');
+      const bA = bracketOf(A), bB = bracketOf(B);
+      if (bA === bB) return api;
+      bA.teams[bA.teams.indexOf(A)] = B;
+      bB.teams[bB.teams.indexOf(B)] = A;
+      return api;
+    },
+    /** Move one team into another bracket of the same level (the bracket must have room). */
+    moveTeam(teamId, bracketId) {
+      const t = findTeam(teamId);
+      const to = brackets.find(b => b.id === bracketId);
+      if (!to) throw new Error('Bracket not found: ' + bracketId);
+      if (to.level !== t.level) throw new Error('A team can only move inside its own skill level');
+      const from = bracketOf(t);
+      if (from === to) return api;
+      if (to.teams.length >= opt.bracketSize) throw new Error(to.name + ' is already full (' + opt.bracketSize + ' teams)');
+      from.teams.splice(from.teams.indexOf(t), 1);
+      to.teams.push(t);
+      if (!from.teams.length) brackets.splice(brackets.indexOf(from), 1);
+      return api;
+    },
+    /** Pair the players again at random. The brackets are redrawn too, because the teams changed. */
+    reshuffleTeams(seed) {
+      if (seed !== undefined) rand = makeRng(seed);
+      pairAll(); makeBrackets();
+      return api;
+    },
+    /** Redraw the brackets only. The teams stay exactly as they are (including manual swaps). */
+    reshuffleBrackets(seed) {
+      if (seed !== undefined) rand = makeRng(seed);
+      makeBrackets();
+      return api;
+    },
+    /** Throw away every manual change and draw everything again at random. */
+    reshuffle(seed) {
+      if (seed !== undefined) rand = makeRng(seed);
+      shuffleAll();
+      return api;
+    },
+    /** The current draw, ready to show on screen. */
+    getState() {
+      return {
+        teams: teams.map(copyTeam),
+        brackets: brackets.map(b => ({ id: b.id, name: b.name, level: b.level, teams: b.teams.map(copyTeam) })),
+        unpaired: unpaired.map(p => Object.assign({}, p)),
+        warnings: drawWarnings(),
+        skipped
+      };
+    },
+    /** Everything needed to continue later: teams, brackets and unpaired players (manual edits included). */
+    snapshot() {
+      return {
+        teams: teams.map(copyTeam), unpaired: unpaired.map(p => Object.assign({}, p)),
+        brackets: brackets.map(b => ({ id: b.id, name: b.name, level: b.level, teams: b.teams.map(t => ({ id: t.id })) }))
+      };
+    },
+    /** Puts a snapshot() back exactly as it was. */
+    restore(s) {
+      teams = s.teams.map(t => ({ id: t.id, name: t.name, custom: !!t.custom, players: t.players.slice(), level: t.level }));
+      const byId = {}; teams.forEach(t => { byId[t.id] = t; });
+      unpaired = s.unpaired.map(p => Object.assign({}, p));
+      brackets = s.brackets.map(b => ({ id: b.id, name: b.name, level: b.level, teams: b.teams.map(t => byId[t.id]).filter(Boolean) }));
+      nextTeamId = teams.reduce((n, t) => Math.max(n, +String(t.id).replace(/\D/g, '') || 0), 0) + 1;
+      return api;
+    },
+    /** Plain data you can save and later pass to generateScheduleFromBrackets(). */
+    toJSON() {
+      return { brackets: api.getState().brackets, unpaired: api.getState().unpaired };
+    },
+    /** Step 3: build the game schedule from the current (possibly edited) draw. */
+    generate() {
+      const result = generateScheduleFromBrackets(api.getState().brackets, opt);
+      result.unpaired = api.getState().unpaired;
+      result.skipped = skipped;
+      result.warnings = drawWarnings().concat(result.warnings);
+      return result;
+    }
+  };
+
+  function drawWarnings() {
+    const w = warnings.slice();
+    unpaired.forEach(p => w.push(p.name + ' (' + p.level + ') has no partner. Pair them with another ' + p.level + ' player.'));
+    return w;
+  }
+  function copyTeam(t) { return { id: t.id, name: t.name, level: t.level, custom: !!t.custom, players: t.players.slice() }; }
+  return api;
+}
+
+/** One-shot version: blind pairing + schedule, no manual step. */
+function generateSchedule(registrations, options) {
+  return createDraw(registrations, options).generate();
+}
+
+/** Builds the schedule from brackets: [{ id, name, level, teams: [{ name, players: [a, b] }] }] */
+function generateScheduleFromBrackets(brackets, options) {
+  const opt = withDefaults(options);
+  const rand = makeRng(opt.seed);
+  const warnings = [];
+
+  brackets.forEach(b => {
+    if (b.teams.length < 2) warnings.push(b.name + ' has only ' + b.teams.length + ' team, so it has no games.');
+    else if (b.teams.length < opt.bracketSize) warnings.push(b.name + ' has only ' + b.teams.length + ' teams.');
+  });
+
+  // round-robin pairings for every bracket
+  const pending = [];
+  brackets.forEach(b => {
+    roundRobin(b.teams).forEach((round, r) => {
+      round.forEach(([t1, t2]) => pending.push({
+        bracket: b.name, bracketId: b.id, level: b.level, round: r + 1, team1: t1, team2: t2,
+        players: t1.players.concat(t2.players).map(keyOf), tie: rand()
+      }));
+    });
+  });
+  const remainingIn = {};
+  pending.forEach(m => { remainingIn[m.bracketId] = (remainingIn[m.bracketId] || 0) + 1; });
+
+  // place matches into slots and courts
+  const lastSlot = {};
+  const scheduled = [];
+  let todo = pending.slice();
+  let slot = 0;
+  while (todo.length && slot < 1000) {
+    // brackets with the most games left go first, so every bracket finishes at a similar time
+    const lv = m => opt.scheduleOrder.indexOf(m.level);
+    todo.sort((a, b) => lv(a) - lv(b) || remainingIn[b.bracketId] - remainingIn[a.bracketId] || a.round - b.round || a.tie - b.tie);
+    const busy = new Set();
+    const placed = [];
+    for (const m of todo) {
+      if (placed.length >= opt.courts) break;
+      const free = m.players.every(p => !busy.has(p) && (lastSlot[p] === undefined || slot - lastSlot[p] > opt.restSlots));
+      if (!free) continue;
+      m.players.forEach(p => busy.add(p));
+      placed.push(m);
+    }
+    placed.forEach((m, i) => {
+      m.players.forEach(p => { lastSlot[p] = slot; });
+      remainingIn[m.bracketId]--;
+      scheduled.push(Object.assign(m, { slot, court: i + 1 }));
+    });
+    todo = todo.filter(m => !placed.includes(m));
+    slot++;                // an empty slot is simply a rest period for everyone
+  }
+  if (todo.length) warnings.push(todo.length + ' games could not be scheduled.');
+
+  // times and summary
+  const startMin = toMinutes(opt.startTime);
+  const matches = scheduled.map((m, i) => ({
+    id: i + 1, slot: m.slot + 1,
+    start: fmt(startMin + m.slot * opt.slotMinutes),
+    end: fmt(startMin + (m.slot + 1) * opt.slotMinutes),
+    court: m.court, courtName: 'Court ' + (opt.firstCourt + m.court - 1), bracket: m.bracket, level: m.level, round: m.round, team1: m.team1, team2: m.team2
+  })).sort((a, b) => a.slot - b.slot || a.court - b.court);
+
+  const lastIdx = scheduled.length ? Math.max.apply(null, scheduled.map(m => m.slot)) : -1;
+  const endMin = startMin + (lastIdx + 1) * opt.slotMinutes;
+  const status = !scheduled.length ? 'NO_GAMES'
+    : endMin <= toMinutes(opt.normalEndTime) ? 'ON_TIME'
+    : endMin <= toMinutes(opt.hardEndTime) ? 'NEEDS_EXTENSION' : 'EXCEEDS_LIMIT';
+  if (status === 'NEEDS_EXTENSION') warnings.push('Games finish at ' + fmt(endMin) + ', past ' + fmt(toMinutes(opt.normalEndTime)) + '. The extension is needed.');
+  if (status === 'EXCEEDS_LIMIT') warnings.push('Games would finish at ' + fmt(endMin) + ', past the ' + fmt(toMinutes(opt.hardEndTime)) + ' limit. Add courts or split the event across two days.');
+
+  return {
+    matches,
+    brackets: brackets.map(b => ({ id: b.id, name: b.name, level: b.level, teams: b.teams })),
+    unpaired: [], skipped: [], warnings,
+    summary: {
+      teams: brackets.reduce((n, b) => n + b.teams.length, 0), brackets: brackets.length, matches: matches.length,
+      slotsUsed: lastIdx + 1, finishesAt: lastIdx >= 0 ? fmt(endMin) : null, status,
+      levelStarts: opt.scheduleOrder.reduce((o, l) => { const s = matches.filter(m => m.level === l); if (s.length) o[l] = s[0].start; return o; }, {})
+    }
+  };
+}
+
+function withDefaults(options) {
+  return Object.assign({
+    levels: ['High', 'Mid', 'Low'],
+    scheduleOrder: ['Low', 'Mid', 'High'],   // lowest level plays first, High is scheduled last (later in the day)
+    firstCourt: 7,           // courts are named Court 7, Court 8, ...
+    advance: 2,              // teams per bracket that move on to the knockout round
+    koCourtPriority: [2, 1, 3, 0],   // knockout games use Court 9, then 8, then 10, and Court 7 last (offsets from firstCourt)
+    coin: {},                // coin-toss results { teamName: number } used to break ties that nothing else can
+    bracketSize: 4,          // teams per bracket
+    courts: 4,
+    startTime: '14:00',      // 2:00 PM
+    slotMinutes: 20,
+    normalEndTime: '21:00',  // 9:00 PM
+    hardEndTime: '22:00',    // 10:00 PM (extension)
+    restSlots: 1,            // slots a player must rest between two games
+    seed: null               // number for a repeatable draw, or null for a fresh random draw
+  }, options || {});
+}
+
+/** Checks a finished schedule against the rules. Returns a list of problems (empty = all good). */
+function validateSchedule(result, options) {
+  const opt = Object.assign({ courts: 4, restSlots: 1, bracketSize: 4 }, options || {});
+  const problems = [];
+  const bySlot = {}, played = {}, pairs = {};
+  result.matches.forEach(m => {
+    (bySlot[m.slot] = bySlot[m.slot] || []).push(m);
+    m.team1.players.concat(m.team2.players).map(keyOf).forEach(p => (played[p] = played[p] || []).push(m.slot));
+    const key = m.bracket + '|' + [m.team1.name, m.team2.name].sort().join(' vs ');
+    pairs[key] = (pairs[key] || 0) + 1;
+  });
+  Object.keys(bySlot).forEach(s => {
+    if (bySlot[s].length > opt.courts) problems.push('Slot ' + s + ' uses more than ' + opt.courts + ' courts');
+    const courts = bySlot[s].map(m => m.court);
+    if (new Set(courts).size !== courts.length) problems.push('Slot ' + s + ' has two games on one court');
+  });
+  Object.keys(played).forEach(p => {
+    const s = played[p].slice().sort((a, b) => a - b);
+    for (let i = 1; i < s.length; i++) {
+      if (s[i] === s[i - 1]) problems.push(p + ' plays twice in slot ' + s[i]);
+      else if (s[i] - s[i - 1] <= opt.restSlots) problems.push(p + ' plays back-to-back (slots ' + s[i - 1] + ' and ' + s[i] + ')');
+    }
+  });
+  Object.keys(pairs).forEach(k => { if (pairs[k] !== 1) problems.push(k + ' is played ' + pairs[k] + ' times'); });
+  result.brackets.forEach(b => {
+    const n = b.teams.length, expected = n * (n - 1) / 2;
+    const got = result.matches.filter(m => m.bracket === b.name).length;
+    if (got !== expected) problems.push(b.name + ' has ' + got + ' games, expected ' + expected);
+  });
+  return problems;
+}
+
+// ---------------------------------------------------------------- helpers
+function roundRobin(teams) {
+  const list = teams.slice();
+  if (list.length < 2) return [];
+  if (list.length % 2) list.push(null);               // null = bye
+  const n = list.length, rounds = [];
+  for (let r = 0; r < n - 1; r++) {
+    const games = [];
+    for (let i = 0; i < n / 2; i++) {
+      const a = list[i], b = list[n - 1 - i];
+      if (a && b) games.push([a, b]);
+    }
+    rounds.push(games);
+    list.splice(1, 0, list.pop());                    // rotate everyone except the first team
+  }
+  return rounds;
+}
+
+function shuffle(arr, rand) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function makeRng(seed) {                               // mulberry32 (repeatable when a seed is given)
+  if (seed === null || seed === undefined) return Math.random;
+  let s = seed >>> 0;
+  return function () {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function keyOf(name) { return String(name).trim().toLowerCase(); }
+function toMinutes(hhmm) { const p = hhmm.split(':'); return +p[0] * 60 + +p[1]; }
+function fmt(min) {
+  const h = Math.floor(min / 60) % 24, m = min % 60;
+  return ((h % 12) || 12) + ':' + String(m).padStart(2, '0') + ' ' + (h < 12 ? 'AM' : 'PM');
+}
+
+// ================================================================ results, standings, knockout
+/**
+ * Standings per bracket. results = { [matchId]: { a: scoreOfTeam1, b: scoreOfTeam2 } }
+ * Ranking (same as your Challonge events): match wins, then total points scored (pf), then head-to-head,
+ * then point difference, then a recorded coin toss (options.coin).
+ */
+function computeStandings(brackets, matches, results, options) {
+  const coin = (options && options.coin) || {};
+  const out = {};
+  brackets.forEach(b => {
+    const rows = b.teams.map(t => ({ team: t, played: 0, won: 0, lost: 0, pf: 0, pa: 0 }));
+    const get = name => rows.find(r => r.team.name === name);
+    const beat = {};
+    let scored = 0, total = 0;
+    matches.filter(m => m.bracket === b.name).forEach(m => {
+      total++;
+      const r = (results || {})[m.id];
+      if (!r || typeof r.a !== 'number' || typeof r.b !== 'number' || r.a === r.b) return;
+      const A = get(m.team1.name), B = get(m.team2.name), aWon = r.a > r.b;
+      A.played++; B.played++; A.pf += r.a; A.pa += r.b; B.pf += r.b; B.pa += r.a;
+      (aWon ? A : B).won++; (aWon ? B : A).lost++;
+      beat[(aWon ? m.team1 : m.team2).name + '>' + (aWon ? m.team2 : m.team1).name] = 1;
+      scored++;
+    });
+    rows.forEach(r => { r.pd = r.pf - r.pa; });
+    const h2h = (x, y) => (beat[y.team.name + '>' + x.team.name] ? 1 : 0) - (beat[x.team.name + '>' + y.team.name] ? 1 : 0);
+    rows.sort((x, y) => y.won - x.won || y.pf - x.pf || h2h(x, y) || y.pd - x.pd || (coin[y.team.name] || 0) - (coin[x.team.name] || 0) || x.team.name.localeCompare(y.team.name));
+    rows.forEach((r, i) => {
+      const n = rows[i + 1];
+      r.rank = i + 1;
+      const tossed = !!n && coin[r.team.name] !== undefined && coin[n.team.name] !== undefined && coin[r.team.name] !== coin[n.team.name];
+      r.tied = !!n && n.won === r.won && n.pf === r.pf && n.pd === r.pd && h2h(r, n) === 0 && !tossed;
+    });
+    out[b.id] = { rows, scored, total, complete: scored === total };
+  });
+  return out;
+}
+
+/**
+ * Single-elimination knockout, one per skill level. The top `advance` teams (default 2) of every
+ * bracket go through. Group winners are seeded first, then runners-up; the best seeds get byes when the
+ * field is not a power of 2, and teams from the same bracket are kept apart in the first round.
+ */
+function buildKnockout(brackets, standings, options) {
+  const opt = withDefaults(options), adv = opt.advance || 2, matches = [], champions = [];
+  const coin = opt.coin || {}, ties = [];
+  const better = (x, y) => y.row.won - x.row.won || y.row.pf - x.row.pf || y.row.pd - x.row.pd || (coin[y.row.team.name] || 0) - (coin[x.row.team.name] || 0);
+  opt.levels.forEach(level => {
+    const bs = brackets.filter(b => b.level === level), entries = [];
+    for (let r = 0; r < adv; r++) {
+      entries.push.apply(entries, bs.map(b => ({ row: standings[b.id].rows[r], bracket: b.name })).filter(x => x.row).sort(better));
+    }
+    entries.forEach((e, i) => { e.team = e.row.team; e.seed = i + 1; });
+    if (entries.length < 2) { if (entries.length) champions.push({ level, ref: { team: entries[0].team } }); return; }
+
+    let size = 1; while (size < entries.length) size *= 2;
+    const byes = size - entries.length;
+    if (byes > 0 && byes < entries.length) {                    // is the last BYE decided by a tie?
+      const a = entries[byes - 1], b = entries[byes], same = e => e.row.rank === a.row.rank && e.row.won === a.row.won && e.row.pf === a.row.pf && e.row.pd === a.row.pd;
+      const tossed = coin[a.team.name] !== undefined && coin[b.team.name] !== undefined && coin[a.team.name] !== coin[b.team.name];
+      if (same(a) && same(b) && !tossed) ties.push({ level, teams: entries.filter(same).map(e => e.team.name) });
+    }
+    let order = [1]; while (order.length < size) { const n = order.length * 2; order = order.reduce((a, s) => a.concat([s, n + 1 - s]), []); }
+    const slots = order.map(s => entries[s - 1] || null);       // null = bye
+
+    const clash = i => slots[2 * i] && slots[2 * i + 1] && slots[2 * i].bracket === slots[2 * i + 1].bracket;
+    for (let pass = 0; pass < 30; pass++) {
+      let bad = -1;
+      for (let i = 0; i < size / 2; i++) if (clash(i)) { bad = i; break; }
+      if (bad < 0) break;
+      const pos = 2 * bad + 1;
+      let fixed = false;
+      for (let q = 0; q < size && !fixed; q++) {
+        if (q === pos || !slots[q] || slots[q].row.rank === 1) continue;   // group winners stay put
+        [slots[pos], slots[q]] = [slots[q], slots[pos]];
+        if (!clash(bad) && !clash(q >> 1)) fixed = true; else [slots[pos], slots[q]] = [slots[q], slots[pos]];
+      }
+      if (!fixed) break;
+    }
+
+    let refs = slots.map(e => e && { team: e.team, bracket: e.bracket, seed: e.seed }), rnd = 1;
+    while (refs.length > 1) {
+      const next = [];
+      const name = refs.length === 2 ? 'Finals' : refs.length === 4 ? 'Semifinals' : 'Round ' + rnd;
+      for (let i = 0; i < refs.length; i += 2) {
+        const a = refs[i], b = refs[i + 1];
+        if (a && b) {
+          const id = 'KO-' + level + '-R' + rnd + '-' + (i / 2 + 1);
+          matches.push({ id, level, round: rnd, roundName: name, slots: [a, b], after: [a, b].filter(x => x.winnerOf).map(x => x.winnerOf) });
+          next.push({ winnerOf: id });
+        } else next.push(a || b);          // a bye: the team goes straight to the next round
+      }
+      refs = next; rnd++;
+    }
+    champions.push({ level, ref: refs[0] });
+  });
+  return { matches, champions, ties };
+}
+
+/** Fills in team names (and winners) from knockout scores: koResults = { [matchId]: { a, b } } */
+function resolveKnockout(ko, koResults) {
+  const winner = {};
+  const matches = ko.matches.map(m => {
+    const pick = ref => ref.team ? ref.team : (winner[ref.winnerOf] || null);
+    const t1 = pick(m.slots[0]), t2 = pick(m.slots[1]), r = (koResults || {})[m.id];
+    let w = null;
+    if (t1 && t2 && r && typeof r.a === 'number' && typeof r.b === 'number' && r.a !== r.b) w = r.a > r.b ? t1 : t2;
+    if (w) winner[m.id] = w;
+    return Object.assign({}, m, { team1: t1, team2: t2, winner: w });
+  });
+  const champions = ko.champions.map(c => ({ level: c.level, team: c.ref.team || winner[c.ref.winnerOf] || null }));
+  return { matches, champions };
+}
+
+/** Puts the knockout games on courts and time slots, starting after the group stage (with a rest slot). */
+function scheduleKnockout(ko, groupLastSlot, options) {
+  const opt = withDefaults(options), start = toMinutes(opt.startTime), slotOf = {}, out = [];
+  const pref = (opt.koCourtPriority || []).filter(o => o < opt.courts);
+  for (let o = 0; o < opt.courts; o++) if (!pref.includes(o)) pref.push(o);
+  let todo = ko.matches.slice(), slot = groupLastSlot + 1 + opt.restSlots;
+  while (todo.length && slot < 1000) {
+    const ready = todo
+      .filter(m => m.after.every(id => slotOf[id] !== undefined && slot - slotOf[id] > opt.restSlots))
+      .sort((a, b) => a.round - b.round || opt.scheduleOrder.indexOf(a.level) - opt.scheduleOrder.indexOf(b.level))
+      .slice(0, opt.courts);
+    ready.forEach((m, i) => {
+      slotOf[m.id] = slot;
+      const off = pref[i];
+      out.push(Object.assign({}, m, { slot, court: off + 1, courtName: 'Court ' + (opt.firstCourt + off), start: fmt(start + (slot - 1) * opt.slotMinutes), end: fmt(start + slot * opt.slotMinutes) }));
+    });
+    todo = todo.filter(m => !ready.includes(m));
+    slot++;
+  }
+  const last = out.length ? Math.max.apply(null, out.map(m => m.slot)) : groupLastSlot;
+  const endMin = start + last * opt.slotMinutes;
+  const status = !out.length ? 'NO_GAMES' : endMin <= toMinutes(opt.normalEndTime) ? 'ON_TIME'
+    : endMin <= toMinutes(opt.hardEndTime) ? 'NEEDS_EXTENSION' : 'EXCEEDS_LIMIT';
+  return { matches: out.sort((a, b) => a.slot - b.slot || a.court - b.court), summary: { finishesAt: out.length ? fmt(endMin) : null, status } };
+}
+
+
+
+</script>
+<script>
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let coin = {}, locks = { add: false, teams: false, brackets: false };
+let draw = null, gopt = {}, sched = null, results = {}, ko = null, koSched = null, koResults = {};
+const LEVELS = ['High', 'Mid', 'Low'];
+const byLevel = (list, fn) => LEVELS.filter(l => list.some(b => b.level === l)).map(l =>
+  '<h3 class="lvl">Skill Level: ' + l + '</h3><div class="grid">' + list.filter(b => b.level === l).map(fn).join('') + '</div>').join('');
+const hideResults = () => { ['#schedSec', '#standSec', '#koSec'].forEach(x => $(x).classList.add('hidden')); sched = null; results = {}; ko = null; koSched = null; koResults = {}; coin = {}; };
+const hasScores = () => Object.values(results).some(r => r.saved) || Object.values(koResults).some(r => r.saved);
+function blocked(out) {
+  if (!hasScores()) return false;
+  $(out).textContent = 'Scores are already saved. Press "Clear all scores" in Standings before changing the draw.';
+  return true;
+}
+
+function parsePlayers(text) {
+  return text.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const p = l.split(/[,\t]/); return { name: (p[0] || '').trim(), skill: (p[1] || '').trim() };
+  });
+}
+$('#sample').onclick = () => {
+  const out = [];
+  const counts = { High: 32, Mid: 32, Low: 24 };
+  Object.keys(counts).forEach(l => { for (let i = 1; i <= counts[l]; i++) out.push(l + ' Player ' + i + ', ' + l); });
+  $('#players').value = out.join('\n');
+};
+function startDraw() {
+  if (blocked('#loadMsg')) return;
+  const list = parsePlayers($('#players').value);
+  if (!list.length) { $('#loadMsg').textContent = 'Add at least one player first.'; return; }
+  gopt = { courts: Math.max(1, +$('#courts').value || 4), startTime: $('#start').value || '14:00', firstCourt: Math.max(1, +$('#firstCourt').value || 7) };
+  draw = createDraw(list, gopt);
+  locks.teams = locks.brackets = false;
+  selP = selT = null;
+  const skipped = draw.getState().skipped.length;
+  $('#loadMsg').textContent = skipped ? skipped + ' line(s) skipped: each line needs a name and a level of High, Mid or Low.' : '';
+  $('#drawSec').classList.remove('hidden'); hideResults();
+  applyLocks();
+  $('#drawSec').scrollIntoView({ behavior: 'smooth' });
+}
+$('#drawBtn').onclick = startDraw;
+
+const manT = () => $('#manualTeams').checked, manB = () => $('#manualBrackets').checked;
+let selP = null, selT = null;   // picked player (teams) and picked team (brackets)
+
+function chip(name, level) {
+  const m = manT();
+  return '<span class="pl' + (m ? ' ed' : '') + (selP && selP.name === name ? ' on' : '') + '" data-p="' + esc(name) + '" data-l="' + level + '"' +
+    (m ? ' tabindex="0" role="button"' : '') + '>' + esc(name) + '</span>';
+}
+function renderTeams(msg, isErr) {
+  const st = draw.getState();
+  $('#teams').innerHTML = LEVELS.filter(l => st.teams.some(t => t.level === l)).map(l =>
+    '<h3 class="lvl">Skill Level: ' + l + '</h3><div class="grid">' + st.teams.filter(t => t.level === l).map(t =>
+      '<div class="team"><span class="n" style="color:var(--mute);font-size:12px">' + t.id + '</span>' + t.players.map(p => chip(p, l)).join('') + '</div>').join('') + '</div>').join('');
+  $('#unpaired').innerHTML = st.unpaired.length
+    ? '<div class="card" style="margin-bottom:12px"><b>Waiting for a partner</b><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">' +
+      st.unpaired.map(p => chip(p.name, p.level)).join('') + '</div></div>' : '';
+  const h = msg || (manT() ? (!selP ? 'Tap a player to pick them, then tap another player of the same level to swap partners.' : 'Picked ' + selP.name + '. Tap another ' + selP.level + ' player to swap.') : '');
+  $('#hintT').textContent = h; $('#hintT').className = 'hint' + (isErr ? ' err' : '');
+}
+function renderBrackets(msg, isErr) {
+  const st = draw.getState(), m = manB();
+  $('#brackets').innerHTML = byLevel(st.brackets, b =>
+    '<div class="card"><div class="bh"><b>' + esc(b.name) + '</b><span class="n">' + b.teams.length + ' teams</span>' +
+    (m && selT && selT.level === b.level ? '<button class="mv" data-b="' + b.id + '">Move here</button>' : '') + '</div>' +
+    b.teams.map(t => '<div class="team' + (selT && selT.id === t.id ? ' on' : '') + '">' +
+      (m ? '<button class="tm" data-t="' + t.id + '" data-l="' + t.level + '">Swap team</button>' : '') + '<span>' + esc(t.name) + '</span></div>').join('') + '</div>');
+  const h = msg || (m ? (!selT ? 'Tap "Swap team" on a team, then "Swap team" on another team of the same level, or "Move here" on a bracket. The teams themselves do not change.'
+    : 'Team picked. Tap "Swap team" on another ' + selT.level + ' team, or "Move here" on a bracket.') : '');
+  $('#hintB').textContent = h; $('#hintB').className = 'hint' + (isErr ? ' err' : '');
+}
+const renderDraw = () => { renderTeams(); renderBrackets(); };
+
+$('#manualTeams').onchange = () => { selP = null; renderTeams(); };
+$('#manualBrackets').onchange = () => { selT = null; renderBrackets(); };
+$('#shuffleTeams').onclick = () => { if (blocked('#hintT')) return; draw.reshuffleTeams(); selP = selT = null; hideResults(); renderTeams(); renderBrackets('Teams were paired again, so the brackets were redrawn too.'); };
+$('#shuffleBrackets').onclick = () => { if (blocked('#hintB')) return; draw.reshuffleBrackets(); selT = null; hideResults(); renderBrackets('Brackets were redrawn. The teams did not change.'); };
+
+document.addEventListener('click', e => {
+  if (!draw) return;
+  const p = e.target.closest && e.target.closest('.pl'), t = e.target.closest && e.target.closest('.tm'), mv = e.target.closest && e.target.closest('.mv');
+  if ((p && manT() && blocked('#hintT')) || (((t || mv) && manB()) && blocked('#hintB'))) return;
+  try {
+    if (p && manT()) {
+      if (selP && selP.name !== p.dataset.p) { draw.swapPlayers(selP.name, p.dataset.p); selP = null; hideResults(); }
+      else selP = selP && selP.name === p.dataset.p ? null : { name: p.dataset.p, level: p.dataset.l };
+      renderDraw();
+    } else if ((t || mv) && manB()) {
+      if (mv && selT) { draw.moveTeam(selT.id, mv.dataset.b); selT = null; hideResults(); }
+      else if (t) {
+        if (selT && selT.id !== t.dataset.t) { draw.swapTeams(selT.id, t.dataset.t); selT = null; hideResults(); }
+        else selT = selT && selT.id === t.dataset.t ? null : { id: t.dataset.t, level: t.dataset.l };
+      }
+      renderBrackets();
+    }
+  } catch (err) { if (p) { selP = null; renderTeams(err.message, true); } else { selT = null; renderBrackets(err.message, true); } }
+});
+document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('pl')) { e.preventDefault(); e.target.click(); } });
+
+const LABEL = { ON_TIME: 'Finishes on time', NEEDS_EXTENSION: 'Needs the extension', EXCEEDS_LIMIT: 'Too long', NO_GAMES: 'No games' };
+const tag = st => '<span class="tag ' + st + '">' + LABEL[st] + '</span>';
+const MAXS = 60;
+function scoreBox(id, side, kind, val, off) {
+  return '<input class="sc" type="number" min="0" max="' + MAXS + '" inputmode="numeric" data-k="' + kind + '" data-m="' + id + '" data-s="' + side + '"' +
+    (val != null ? ' value="' + val + '"' : '') + (off ? ' disabled' : '') + ' aria-label="Score">';
+}
+function matchCell(id, kind, t1, t2, r, off, w) {
+  r = r || {};
+  const locked = !!r.saved, dis = off || locked, nm = t => t ? esc(t.name) : 'To be decided';
+  return '<div class="mh"><span class="l' + (w && w === t1 ? ' win' : '') + '">' + nm(t1) + '</span>' + scoreBox(id, 'a', kind, r.a, dis) +
+    '<i>vs</i>' + scoreBox(id, 'b', kind, r.b, dis) + '<span' + (w && w === t2 ? ' class="win"' : '') + '>' + nm(t2) + '</span>' +
+    '<button type="button" class="sv' + (locked ? ' ed' : '') + '" data-k="' + kind + '" data-m="' + id + '"' + (off ? ' disabled' : '') + '>' + (locked ? 'Edit' : 'Save') + '</button></div>';
+}
+
+$('#genBtn').onclick = () => {
+  if (blocked('#hintB')) return;
+  sched = draw.generate(); results = {}; ko = null; koSched = null; koResults = {}; coin = {};
+  say('#gMsg', ''); renderSchedule();
+  $('#schedSec').scrollIntoView({ behavior: 'smooth' });
+};
+
+function renderSchedule() {
+  const s = sched.summary, n = gopt.courts;
+  $('#summary').innerHTML = '<p>' + tag(s.status) + ' &nbsp;' + s.matches + ' games, ' + s.teams + ' teams, last group game ends ' + (s.finishesAt || '-') + '</p>' +
+    '<p class="hint">Level start times: ' + Object.keys(s.levelStarts).map(l => l + ' ' + s.levelStarts[l]).join(', ') + '</p>' +
+    sched.warnings.map(w => '<p class="warn">' + esc(w) + '</p>').join('');
+  let html = '<tr><th>Time</th><th>Court</th><th>Bracket</th><th>Match</th></tr>';
+  for (let i = 1; i <= s.slotsUsed; i++) {
+    const t0 = toMinutes(gopt.startTime) + (i - 1) * 20, when = fmt(t0) + ' - ' + fmt(t0 + 20);
+    const ms = sched.matches.filter(m => m.slot === i);
+    if (!ms.length) { html += '<tr class="rest first"><td class="t">' + when + '</td><td colspan="3">Rest slot, no games</td></tr>'; continue; }
+    ms.forEach((m, j) => {
+      html += '<tr class="' + (j === 0 ? 'first' : '') + '"><td class="t">' + (j === 0 ? when : '') + '</td><td>' + m.courtName + '</td><td>' + esc(m.bracket) +
+        '</td><td>' + matchCell(m.id, 'g', m.team1, m.team2, results[m.id], false, null) + '</td></tr>';
+    });
+  }
+  $('#table').innerHTML = html;
+  $('#schedSec').classList.remove('hidden'); $('#standSec').classList.remove('hidden');
+  renderStandings();
+  if (ko) { $('#koSec').classList.remove('hidden'); renderKo(); } else $('#koSec').classList.add('hidden');
+}
+
+const committed = store => Object.keys(store).reduce((o, k) => { if (store[k].saved) o[k] = store[k]; return o; }, {});
+const num = v => { const n = parseInt(v, 10); return isNaN(n) ? null : n; };
+const say = (id, t) => { $(id).textContent = t; };
+const inputsOf = (kind, id) => [...document.querySelectorAll('.sc[data-k="' + kind + '"][data-m="' + id + '"]')];
+function setLocked(kind, id, a, b, locked) {
+  const ins = inputsOf(kind, id);
+  if (ins.length === 2) { if (a != null) ins[0].value = a; if (b != null) ins[1].value = b; ins.forEach(i => { i.disabled = locked; }); }
+  const btn = document.querySelector('.sv[data-k="' + kind + '"][data-m="' + id + '"]');
+  if (btn) { btn.textContent = locked ? 'Edit' : 'Save'; btn.classList.toggle('ed', locked); }
+}
+const refresh = kind => { if (kind === 'g') renderStandings(); else renderKo(); };
+
+// typing only keeps a draft; nothing counts until the game is saved
+document.addEventListener('change', e => {
+  const i = e.target.closest && e.target.closest('.sc');
+  if (!i) return;
+  if (i.value !== '') i.value = Math.min(MAXS, Math.max(0, num(i.value) || 0));
+  const store = i.dataset.k === 'g' ? results : koResults, id = i.dataset.m;
+  store[id] = Object.assign(store[id] || {}, { [i.dataset.s]: i.value === '' ? null : +i.value });
+});
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest && e.target.closest('.sv');
+  if (!btn) return;
+  const kind = btn.dataset.k, id = btn.dataset.m, store = kind === 'g' ? results : koResults, out = kind === 'g' ? '#gMsg' : '#kMsg';
+  say(out, '');
+  if (store[id] && store[id].saved) {                                  // Edit
+    if (kind === 'k' && ko.matches.some(m => m.after.includes(id) && koResults[m.id] && koResults[m.id].saved)) {
+      say(out, 'The next-round game that depends on this result is already saved. Press Edit on that game first.'); return;
+    }
+    store[id].saved = false; setLocked(kind, id, null, null, false);
+  } else {                                                             // Save
+    const ins = inputsOf(kind, id), a = num(ins[0].value), b = num(ins[1].value);
+    if (a === null || b === null) return say(out, 'Enter both scores first.');
+    if (a < 0 || b < 0 || a > MAXS || b > MAXS) return say(out, 'Scores must be between 0 and ' + MAXS + '.');
+    if (a === b) return say(out, 'A game cannot end in a tie. Check the scores.');
+    store[id] = { a, b, saved: true }; setLocked(kind, id, a, b, true);
+  }
+  refresh(kind);
+});
+
+// ----- test tools: random scores so the knockout round can be built quickly -----
+const randScore = () => { const lose = 8 + Math.floor(Math.random() * 22); return Math.random() < 0.5 ? [31, lose] : [lose, 31]; };
+$('#randGroup').onclick = () => {
+  sched.matches.forEach(m => {
+    if (results[m.id] && results[m.id].saved) return;
+    const [a, b] = randScore(); results[m.id] = { a, b, saved: true }; setLocked('g', m.id, a, b, true);
+  });
+  say('#gMsg', 'Random test scores were filled in and saved. Press "Clear all scores" before you enter the real results.');
+  renderStandings();
+};
+$('#randKo').onclick = () => {
+  if (!ko) return;
+  for (let r = 0; r < 8; r++) {
+    resolveKnockout(ko, committed(koResults)).matches.forEach(m => {
+      if (m.team1 && m.team2 && !(koResults[m.id] && koResults[m.id].saved)) { const [a, b] = randScore(); koResults[m.id] = { a, b, saved: true }; }
+    });
+  }
+  say('#kMsg', 'Random test scores were filled in. Press "Create knockout round" again to start over.');
+  renderKo();
+};
+let armed = null;
+$('#clearScores').onclick = e => {
+  if (!sched) return;
+  const btn = e.currentTarget;
+  if (!armed) { btn.textContent = 'Click again to clear every score'; armed = setTimeout(() => { btn.textContent = 'Clear all scores'; armed = null; }, 4000); return; }
+  clearTimeout(armed); armed = null; btn.textContent = 'Clear all scores';
+  results = {}; koResults = {}; ko = null; koSched = null; coin = {}; $('#koSec').classList.add('hidden');
+  sched.matches.forEach(m => { inputsOf('g', m.id).forEach(i => { i.value = ''; }); setLocked('g', m.id, null, null, false); });
+  say('#gMsg', 'All scores were cleared.');
+  renderStandings();
+};
+
+function renderStandings() {
+  const st = computeStandings(sched.brackets, sched.matches, committed(results), { coin }), adv = 2;
+  $('#standings').innerHTML = byLevel(sched.brackets, b => {
+    const x = st[b.id];
+    return '<div class="card"><div class="bh"><b>' + esc(b.name) + '</b><span class="n">' + x.scored + '/' + x.total + ' games scored</span></div>' +
+      '<div class="wrap" style="margin:0"><table style="min-width:0"><tr><th>#</th><th>Team</th><th class="nw">W-L</th><th class="nw">Pts</th></tr>' +
+      x.rows.map(r => '<tr class="' + (x.scored && r.rank <= adv ? 'adv' : '') + '"><td>' + r.rank + '</td><td>' + esc(r.team.name) +
+        (x.scored && r.rank <= adv ? ' <span class="tag ON_TIME" style="font-size:11px;padding:0 8px">Advanced</span>' : '') +
+        '</td><td class="nw">' + r.won + '-' + r.lost + '</td><td class="nw">' + r.pf + '</td></tr>').join('') + '</table></div>' +
+      (x.scored && x.rows[adv - 1] && x.rows[adv - 1].tied ? '<p class="warn">Tied for place ' + adv + ': same wins, points, head-to-head and point difference. <button class="mv coin" data-b="' + b.id + '">Coin toss</button></p>' : '') +
+      (x.rows[adv] && coin[x.rows[adv - 1].team.name] !== undefined && coin[x.rows[adv].team.name] !== undefined ? '<p class="hint">Place ' + adv + ' was decided by coin toss.</p>' : '') + '</div>';
+  });
+  const left = Object.values(st).reduce((n, x) => n + x.total - x.scored, 0);
+  $('#koHint').textContent = left ? left + ' group game(s) still have no score, so the standings can still change.' : 'All group games are scored.';
+  if (ko) $('#koHint').textContent += ' The knockout round was already created. Press "Create knockout round" again to update it.';
+}
+
+function makeKnockout() {
+  const st = computeStandings(sched.brackets, sched.matches, committed(results), { coin });
+  ko = buildKnockout(sched.brackets, st, Object.assign({ coin }, gopt));
+  koSched = scheduleKnockout(ko, sched.summary.slotsUsed, gopt);
+}
+document.addEventListener('click', e => {
+  const c = e.target.closest && e.target.closest('.coin'), k = e.target.closest && e.target.closest('.coinko');
+  if (c) {
+    const rows = computeStandings(sched.brackets, sched.matches, committed(results), { coin })[c.dataset.b].rows, key = rows[1];
+    rows.filter(r => r.won === key.won && r.pf === key.pf && r.pd === key.pd).forEach(r => { coin[r.team.name] = Math.random(); });
+    renderStandings();
+  } else if (k) {
+    if (Object.values(koResults).some(r => r.saved)) { say('#kMsg', 'Edit the saved knockout scores first, then toss the coin.'); return; }
+    ko.ties[+k.dataset.i].teams.forEach(n => { coin[n] = Math.random(); });
+    makeKnockout(); koResults = {}; renderKo();
+  }
+});
+$('#koBtn').onclick = () => {
+  say('#kMsg', ''); makeKnockout(); koResults = {};
+  $('#koSec').classList.remove('hidden'); renderKo();
+  $('#koSec').scrollIntoView({ behavior: 'smooth' });
+};
+
+function koChart(level, rs, sch, seedOf, result) {
+  const ms = rs.matches.filter(m => m.level === level);
+  if (!ms.length) return '<p class="hint">Not enough teams for a knockout round.</p>';
+  const R = Math.max.apply(null, ms.map(m => m.round)), BW = 250, GAP = 56, YM = 48, S = 124, TOP = 34;
+  const at = {}, rows = {};
+  ms.forEach(m => { (rows[m.round] = rows[m.round] || []).push(m); });
+  for (let r = 1; r <= R; r++) {
+    let last = null;
+    (rows[r] || []).forEach(m => {
+      const f = m.slots.map(x => x.winnerOf ? at[x.winnerOf] : null);
+      let ym;
+      if (f[0] && f[1]) ym = (f[0].ym + f[1].ym) / 2;
+      else if (f[0]) ym = f[0].ym + 15;
+      else if (f[1]) ym = f[1].ym - 15;
+      else ym = last === null ? YM : last + S;
+      at[m.id] = { x: (r - 1) * (BW + GAP), ym }; last = ym;
+    });
+  }
+  const minTop = Math.min.apply(null, ms.map(m => at[m.id].ym - YM)), dy = TOP - minTop;
+  ms.forEach(m => { at[m.id].ym += dy; });
+  const W = R * (BW + GAP) + 170, H = Math.max.apply(null, ms.map(m => at[m.id].ym)) + 90;
+  let svg = '', html = '';
+  for (let r = 1; r <= R; r++) {
+    html += '<div class="kcolh" style="left:' + (r - 1) * (BW + GAP) + 'px">' + esc((rows[r] && rows[r][0].roundName) || '') + '</div>';
+  }
+  ms.forEach(m => {
+    const me = at[m.id], r = koResults[m.id] || {}, locked = !!r.saved, ready = !!(m.team1 && m.team2), x = sch[m.id];
+    m.slots.forEach((sl, k) => {
+      if (!sl.winnerOf) return;
+      const fr = at[sl.winnerOf], x1 = fr.x + BW, xm = x1 + GAP / 2, y2 = me.ym + (k ? 15 : -15);
+      svg += '<path d="M' + x1 + ' ' + fr.ym + 'H' + xm + 'V' + y2 + 'H' + me.x + '" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".6"/>';
+    });
+    const row = k => {
+      const t = m['team' + k], key = k === 1 ? 'a' : 'b', bye = t && m.slots[k - 1].team && m.round > 1;
+      return '<div class="kr' + (m.winner && m.winner === t ? ' win' : '') + '"><span class="sd">' + ((t && seedOf[t.name]) || '') + '</span><span class="nm" title="' + (t ? esc(t.name) : '') + '">' +
+        (t ? esc(t.name) : 'To be decided') + '</span>' + (bye ? '<em>BYE</em>' : '') + scoreBox(m.id, key, 'k', r[key], locked || !ready) + '</div>';
+    };
+    html += '<div class="kb" style="left:' + me.x + 'px;top:' + (me.ym - YM) + 'px"><div class="kh">' + (x ? esc(x.courtName) + ' · ' + x.start : '') + '</div>' + row(1) + row(2) +
+      '<button type="button" class="sv' + (locked ? ' ed' : '') + '" data-k="k" data-m="' + m.id + '"' + (ready ? '' : ' disabled') + '>' + (locked ? 'Edit' : 'Save') + '</button></div>';
+  });
+  const fin = ms.filter(m => m.round === R)[0], fe = at[fin.id], champ = result.champions.filter(c => c.level === level)[0];
+  html += '<div class="champ" style="left:' + (R * (BW + GAP) - GAP + 20) + 'px;top:' + (fe.ym - 28) + 'px"><span class="n" style="color:var(--mute);font-size:12px">Champion</span><br><b>' +
+    (champ && champ.team ? esc(champ.team.name) : 'To be decided') + '</b></div>';
+  return '<div class="kchart" style="width:' + W + 'px;height:' + H + 'px"><svg width="' + W + '" height="' + H + '" style="position:absolute;left:0;top:0" aria-hidden="true">' + svg + '</svg>' + html + '</div>';
+}
+
+function renderKo() {
+  const done = committed(koResults), rs = resolveKnockout(ko, done), by = {}, sch = {}, seedOf = {};
+  rs.matches.forEach(m => { by[m.id] = m; });
+  koSched.matches.forEach(x => { sch[x.id] = x; });
+  ko.matches.forEach(m => m.slots.forEach(sl => { if (sl.team) seedOf[sl.team.name] = sl.seed; }));
+  const s = koSched.summary;
+  $('#koSummary').innerHTML = '<p>' + tag(s.status) + ' &nbsp;' + ko.matches.length + ' knockout games, last game ends ' + (s.finishesAt || '-') + '</p>' +
+    (ko.ties || []).map((t, i) => '<p class="warn">Tie for a BYE in ' + esc(t.level) + ': ' + t.teams.map(esc).join(', ') + ' are equal on wins, points and point difference. <button class="mv coinko" data-i="' + i + '">Coin toss</button></p>').join('') +
+    (s.status === 'EXCEEDS_LIMIT' ? '<p class="warn">The whole event would run past the limit. Add courts, or play the knockout round on another day.</p>' : '');
+  $('#champs').innerHTML = '';
+  $('#koCharts').innerHTML = LEVELS.filter(l => rs.matches.some(m => m.level === l)).map(l =>
+    '<h3 class="lvl">Skill Level: ' + l + '</h3><div class="wrap kwrap">' + koChart(l, rs, sch, seedOf, rs) + '</div>').join('');
+  const nm = t => t ? esc(t.name) : 'To be decided';
+  $('#koTable').innerHTML = '<tr><th>Time</th><th>Court</th><th>Round</th><th>Match</th></tr>' + koSched.matches.map(x => {
+    const m = by[x.id], r = done[x.id];
+    return '<tr class="first"><td class="t">' + x.start + ' - ' + x.end + '</td><td>' + x.courtName + '</td><td>' + esc(x.level) + ' ' + esc(x.roundName) +
+      '</td><td>' + nm(m.team1) + (r ? ' <b>' + r.a + ' - ' + r.b + '</b> ' : ' <i>vs</i> ') + nm(m.team2) + '</td></tr>';
+  }).join('');
+}
+
+const SECS = { add: '#secAdd', teams: '#secTeams', brackets: '#secBrackets' };
+function applyLock(name) {
+  const sec = $(SECS[name]), on = !!locks[name];
+  if (on && name === 'teams') { $('#manualTeams').checked = false; selP = null; }
+  if (on && name === 'brackets') { $('#manualBrackets').checked = false; selT = null; }
+  sec.querySelectorAll('button:not(.lockbtn), input, textarea').forEach(x => { x.disabled = on; });
+  const b = sec.querySelector('.lockbtn');
+  b.textContent = on ? 'Edit' : 'Save'; b.classList.toggle('ed', on);
+  if (draw && name === 'teams') renderTeams();
+  if (draw && name === 'brackets') renderBrackets();
+}
+const applyLocks = () => Object.keys(SECS).forEach(applyLock);
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('.lockbtn');
+  if (b) { locks[b.dataset.lock] = !locks[b.dataset.lock]; applyLock(b.dataset.lock); }
+});
+
+// ----- tournaments: saved in this browser, reopened later -----
+const store = {
+  get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+};
+let tid = null, saveTimer = null, delArm = null;
+const readIndex = () => { try { return JSON.parse(store.get('fbc.index') || '[]'); } catch (e) { return []; } };
+const writeIndex = l => store.set('fbc.index', JSON.stringify(l));
+const uid = () => 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const capture = () => ({ v: 1, players: $('#players').value, courts: $('#courts').value, firstCourt: $('#firstCourt').value, start: $('#start').value,
+  locks, gopt, draw: draw ? draw.snapshot() : null, sched, results, ko, koSched, koResults, coin });
+
+function describe(st) {
+  let t = parsePlayers(st.players || '').length + ' players';
+  if (st.sched) t += ', ' + st.sched.matches.length + ' games, ' + Object.keys(st.results || {}).filter(k => st.results[k].saved).length + ' scored';
+  if (st.ko) t += ', knockout ' + Object.keys(st.koResults || {}).filter(k => st.koResults[k].saved).length + '/' + st.ko.matches.length + ' played';
+  return t;
+}
+function saveNow() {
+  if (!tid) return;
+  const st = capture(), ok = store.set('fbc.t.' + tid, JSON.stringify(st)), idx = readIndex(), e = idx.find(x => x.id === tid);
+  if (e) { e.updated = Date.now(); e.info = describe(st); writeIndex(idx); }
+  $('#saveNote').textContent = ok ? 'Saved on this device at ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '.' : 'Could not save: browser storage is full or blocked. Use the backup text below.';
+  renderTList();
+}
+['click', 'change', 'input'].forEach(ev => document.addEventListener(ev, () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 400); }, true));
+
+function renderTList() {
+  const idx = readIndex().slice().sort((a, b) => b.updated - a.updated);
+  $('#tlist').innerHTML = '<tr><th>Tournament</th><th>Progress</th><th>Last saved</th><th></th></tr>' + idx.map(e =>
+    '<tr class="' + (e.id === tid ? 'adv' : '') + '"><td><b>' + esc(e.name) + '</b>' + (e.id === tid ? ' <span class="tag ON_TIME" style="font-size:11px;padding:0 8px">Open</span>' : '') + '</td><td>' + esc(e.info || 'Empty') +
+    '</td><td class="nw">' + new Date(e.updated).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '</td><td class="nw">' +
+    (e.id === tid ? '' : '<button class="ghost" data-open="' + e.id + '" type="button">Open</button> ') +
+    '<button class="ghost" data-del="' + e.id + '" type="button">' + (delArm === e.id ? 'Click again to delete' : 'Delete') + '</button></td></tr>').join('');
+}
+
+function openT(id) {
+  saveNow();
+  draw = null; sched = null; results = {}; ko = null; koSched = null; koResults = {}; coin = {}; gopt = {}; selP = selT = null;
+  locks = { add: false, teams: false, brackets: false };
+  $('#drawSec').classList.add('hidden'); ['#schedSec', '#standSec', '#koSec'].forEach(x => $(x).classList.add('hidden'));
+  $('#loadMsg').textContent = ''; $('#players').value = ''; $('#courts').value = 4; $('#firstCourt').value = 7; $('#start').value = '14:00';
+  tid = id; store.set('fbc.last', id);
+  let st = null; try { st = JSON.parse(store.get('fbc.t.' + id) || 'null'); } catch (e) {}
+  if (st) {
+    $('#players').value = st.players || ''; $('#courts').value = st.courts || 4; $('#firstCourt').value = st.firstCourt || 7; $('#start').value = st.start || '14:00';
+    gopt = st.gopt || {}; locks = Object.assign(locks, st.locks || {}); results = st.results || {}; ko = st.ko || null; koSched = st.koSched || null; koResults = st.koResults || {}; coin = st.coin || {};
+    if (st.draw) { draw = createDraw(parsePlayers(st.players), gopt); draw.restore(st.draw); $('#drawSec').classList.remove('hidden'); renderDraw(); }
+    if (st.sched && draw) { sched = st.sched; renderSchedule(); }
+  }
+  applyLocks();
+  const e = readIndex().find(x => x.id === id); $('#tname').value = e ? e.name : '';
+  renderTList();
+}
+document.addEventListener('click', e => {
+  const o = e.target.closest && e.target.closest('[data-open]'), d = e.target.closest && e.target.closest('[data-del]');
+  if (o) { delArm = null; openT(o.dataset.open); }
+  if (d) {
+    if (delArm !== d.dataset.del) { delArm = d.dataset.del; renderTList(); setTimeout(() => { delArm = null; renderTList(); }, 4000); return; }
+    const id = d.dataset.del, rest = readIndex().filter(x => x.id !== id); delArm = null;
+    try { localStorage.removeItem('fbc.t.' + id); } catch (er) {}
+    if (!rest.length) rest.push({ id: uid(), name: 'Tournament 1', updated: Date.now(), info: '' });
+    writeIndex(rest);
+    if (id === tid) { tid = null; openT(rest[0].id); } else renderTList();
+  }
+});
+function addTournament(name, state) {
+  const id = uid(), idx = readIndex(); idx.push({ id, name, updated: Date.now(), info: '' });
+  writeIndex(idx); if (state) store.set('fbc.t.' + id, JSON.stringify(state));
+  openT(id);
+}
+$('#tNew').onclick = () => addTournament($('#tname').value.trim() || 'Tournament ' + (readIndex().length + 1), null);
+$('#tRename').onclick = () => {
+  const idx = readIndex(), e = idx.find(x => x.id === tid), name = $('#tname').value.trim();
+  if (e && name) { e.name = name; writeIndex(idx); renderTList(); saveNow(); }
+};
+$('#bShow').onclick = () => { $('#backup').value = JSON.stringify({ name: $('#tname').value, state: capture() }); $('#backup').select(); $('#bMsg').textContent = 'Copy this text and keep it somewhere safe.'; };
+$('#bLoad').onclick = () => {
+  try {
+    const b = JSON.parse($('#backup').value);
+    if (!b || !b.state) throw new Error('bad');
+    addTournament((b.name || 'Restored tournament') + ' (restored)', b.state);
+    $('#bMsg').textContent = 'Restored as a new tournament.';
+  } catch (e) { $('#bMsg').textContent = 'That text is not a valid backup.'; }
+};
+(function start() {
+  let idx = readIndex();
+  if (!idx.length) { idx = [{ id: uid(), name: 'Tournament 1', updated: Date.now(), info: '' }]; writeIndex(idx); }
+  const last = store.get('fbc.last');
+  openT(idx.some(x => x.id === last) ? last : idx[0].id);
+})();
+
+$('#print').onclick = () => window.print();
+</script>
+</body>
+</html>
