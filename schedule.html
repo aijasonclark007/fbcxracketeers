@@ -126,7 +126,7 @@ details{margin-top:10px}summary{cursor:pointer;color:var(--mute)}
         <div><label for="firstCourt">First court no.</label><input id="firstCourt" type="number" min="1" max="99" value="7"></div>
         <div><label for="start">First game</label><input id="start" type="time" value="14:00"></div>
         <button id="drawBtn" class="go">Pair players</button>
-        <button id="sample" class="ghost" type="button">Load 88 sample players</button>
+        <button id="sample" class="ghost" type="button">Load 72 sample players</button>
       </div>
       <p id="loadMsg" class="hint"></p>
     </div>
@@ -750,7 +750,7 @@ function parsePlayers(text) {
 }
 $('#sample').onclick = () => {
   const out = [];
-  const counts = { High: 32, Mid: 32, Low: 24 };
+  const counts = { High: 24, Mid: 24, Low: 24 };
   Object.keys(counts).forEach(l => { for (let i = 1; i <= counts[l]; i++) out.push(l + ' Player ' + i + ', ' + l); });
   $('#players').value = out.join('\n');
 };
