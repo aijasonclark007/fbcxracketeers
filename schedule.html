@@ -85,6 +85,8 @@ input[type=text]{width:100%;border:1px solid var(--line);border-radius:10px;padd
 details{margin-top:10px}summary{cursor:pointer;color:var(--mute)}
 .hidden{display:none}
 @media print{.noprint{display:none!important}body{background:#fff;color:#000}th{background:#ddd;color:#000}}
+#printView{display:none}.pubwrap{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:#F4F6FB;color:#0B1B33}
+@media print{main{display:none!important}#printView{display:block}}
 </style>
 </head>
 <body>
@@ -154,10 +156,13 @@ details{margin-top:10px}summary{cursor:pointer;color:var(--mute)}
   </div>
 
   <section id="schedSec" class="hidden">
-    <div class="bar">
+    <div class="bar noprint">
       <h2>4. Game schedule</h2>
-      <button id="print" class="ghost noprint" type="button">Print</button>
+      <div class="tools"><button id="pubDl" class="go" type="button">Download shareable page</button><button id="print" class="ghost" type="button">Print</button></div>
     </div>
+    <p id="pubMsg" class="hint noprint">The shareable page has no score boxes or buttons. It is easy to read on a phone, and players can search their name.</p>
+    <details id="pubDet" class="noprint"><summary>Preview what people will see</summary><div id="pubPreview" class="pubwrap"></div>
+      <p class="hint">If the download does not work, copy this code into a file named game-schedule.html:</p><textarea id="pubCode" style="min-height:70px" readonly></textarea></details>
     <div id="summary"></div>
     <p id="gMsg" class="hint"></p>
     <div class="wrap"><table id="table"></table></div>
@@ -183,6 +188,7 @@ details{margin-top:10px}summary{cursor:pointer;color:var(--mute)}
     <div class="wrap"><table id="koTable"></table></div>
   </section>
 </main>
+<div id="printView"></div>
 
 <script>
 /**
@@ -1153,7 +1159,86 @@ $('#bLoad').onclick = () => {
   openT(idx.some(x => x.id === last) ? last : idx[0].id);
 })();
 
-$('#print').onclick = () => window.print();
+const PUB_CSS = `
+.pub{font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#0B1B33;max-width:900px;margin:0 auto;padding:16px}
+.pub h1{font-size:26px;line-height:1.15;margin:0}.pub h2{font-size:20px;margin:28px 0 8px;border-left:5px solid #8DC63F;padding-left:10px}
+.pub .sub{color:#46566e;margin:4px 0 0}.pub .upd{color:#5A6A82;font-size:14px;margin:2px 0 0}
+.pub .tools{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.pub .tools input{flex:1;min-width:200px;padding:10px 12px;border:1px solid #B9C4D6;border-radius:10px;font:inherit}
+.pub .tools button{padding:8px 14px;border-radius:999px;border:1px solid #B9C4D6;background:#fff;color:#0B1B33;font:inherit;font-weight:700;cursor:pointer}
+.pub .tools button.on{background:#0A2547;color:#fff;border-color:#0A2547}
+.pub .slot{margin:12px 0;border:1px solid #D5DCE8;border-radius:12px;overflow:hidden;background:#fff}
+.pub .slot h3{margin:0;padding:8px 14px;background:#0A2547;color:#fff;font-size:16px}
+.pub .game{display:flex;gap:12px;align-items:center;padding:10px 14px;border-top:1px solid #E6EBF3}
+.pub .ct{flex:0 0 76px;font-weight:700}.pub .info{flex:1;min-width:0}.pub .info small{display:block;color:#5A6A82}
+.pub .teams{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:center}.pub .tm{font-weight:600}.pub .vs{color:#7a8aa3;font-size:13px}
+.pub .res{font-weight:800;white-space:nowrap}
+.pub .lv{display:inline-block;padding:0 8px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;margin-right:6px}
+.pub .lv-Low{background:#2E7D32}.pub .lv-Mid{background:#1565C0}.pub .lv-High{background:#C2410C}
+.pub .brk{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.pub .bk{border:1px solid #D5DCE8;border-radius:12px;padding:10px 14px;background:#fff}.pub .bk b{display:block}.pub .bk ol{margin:6px 0 0;padding-left:20px}
+@media print{.pub .tools{display:none}.pub .slot{break-inside:avoid}.pub .slot h3{background:#ddd;color:#000}}
+`;
+const FILTER_JS = `(function(){var q=document.getElementById('q'),bs=[].slice.call(document.querySelectorAll('.pub .tools button')),lv='All';
+function run(){var t=(q.value||'').toLowerCase();[].slice.call(document.querySelectorAll('.pub .slot')).forEach(function(s){var n=0;
+[].slice.call(s.querySelectorAll('.game')).forEach(function(g){var ok=(lv==='All'||g.dataset.level===lv)&&(!t||g.dataset.text.indexOf(t)>-1);g.style.display=ok?'':'none';if(ok)n++;});s.style.display=n?'':'none';});}
+q.addEventListener('input',run);bs.forEach(function(b){b.addEventListener('click',function(){lv=b.dataset.lv;bs.forEach(function(x){x.classList.toggle('on',x===b);});run();});});})();`;
+document.head.appendChild(Object.assign(document.createElement('style'), { textContent: PUB_CSS }));
+
+function pubBody(web) {
+  const name = $('#tname').value.trim() || 'Tournament', done = committed(results);
+  const lvl = l => '<span class="lv lv-' + l + '">' + l + '</span>';
+  const row = (m, court, r) => '<div class="game" data-level="' + m.level + '" data-text="' + esc((m.team1 ? m.team1.name : '') + ' ' + (m.team2 ? m.team2.name : '') + ' ' + m.bracket).toLowerCase() + '">' +
+    '<span class="ct">' + court + '</span><div class="info"><small>' + lvl(m.level) + esc(m.bracket) + '</small><div class="teams"><span class="tm">' + (m.team1 ? esc(m.team1.name) : 'To be decided') +
+    '</span><span class="vs">vs</span><span class="tm">' + (m.team2 ? esc(m.team2.name) : 'To be decided') + '</span></div></div>' + (r ? '<span class="res">' + r.a + ' - ' + r.b + '</span>' : '') + '</div>';
+  let h = '<div class="pub"><h1>FBC x Racketeers Badminton Tournament</h1><p class="sub">' + esc(name) + ' · Game schedule</p><p class="upd">Updated ' +
+    new Date().toLocaleString([], { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '</p>';
+  if (web) h += '<div class="tools"><input id="q" type="search" placeholder="Search your name or team" aria-label="Search"><button class="on" data-lv="All">All</button><button data-lv="Low">Low</button><button data-lv="Mid">Mid</button><button data-lv="High">High</button></div>';
+  h += '<h2>Games</h2>';
+  for (let i = 1; i <= sched.summary.slotsUsed; i++) {
+    const ms = sched.matches.filter(m => m.slot === i);
+    if (ms.length) h += '<div class="slot"><h3>' + ms[0].start + ' - ' + ms[0].end + '</h3>' + ms.map(m => row(m, m.courtName, done[m.id])).join('') + '</div>';
+  }
+  h += '<h2>Brackets</h2>';
+  LEVELS.forEach(l => {
+    const bs = sched.brackets.filter(b => b.level === l);
+    if (bs.length) h += '<p>' + lvl(l) + '</p><div class="brk">' + bs.map(b => '<div class="bk"><b>' + esc(b.name) + '</b><ol>' + b.teams.map(t => '<li>' + esc(t.name) + '</li>').join('') + '</ol></div>').join('') + '</div>';
+  });
+  if (ko && koSched) {
+    const rs = resolveKnockout(ko, committed(koResults)), by = {}, slots = {}, kd = committed(koResults);
+    rs.matches.forEach(m => { by[m.id] = m; });
+    koSched.matches.forEach(x => { (slots[x.slot] = slots[x.slot] || []).push(x); });
+    h += '<h2>Knockout round</h2>';
+    Object.keys(slots).sort((a, b) => a - b).forEach(k => {
+      h += '<div class="slot"><h3>' + slots[k][0].start + ' - ' + slots[k][0].end + '</h3>' +
+        slots[k].map(x => row(Object.assign({}, by[x.id], { bracket: by[x.id].roundName }), x.courtName, kd[x.id])).join('') + '</div>';
+    });
+  }
+  return h + '</div>';
+}
+function pubDocument() {
+  const name = $('#tname').value.trim() || 'Tournament';
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
+    '<title>Game Schedule - FBC x Racketeers Badminton Tournament</title>' +
+    '<meta property="og:title" content="FBC x Racketeers Badminton Tournament - Game Schedule"><meta property="og:type" content="website">' +
+    '<meta property="og:description" content="' + esc(name) + ': games, courts and times. Search your name to find your game.">' +
+    '<style>body{margin:0;background:#F4F6FB}' + PUB_CSS + '</style></head><body>' + pubBody(true) + '<script>' + FILTER_JS + '<\/script></body></html>';
+}
+function refreshPub() { if (sched && $('#pubDet').open) { $('#pubPreview').innerHTML = pubBody(false); $('#pubCode').value = pubDocument(); } }
+$('#pubDet').addEventListener('toggle', refreshPub);
+
+$('#pubDl').onclick = async () => {
+  if (!sched) return;
+  const name = 'game-schedule.html', text = pubDocument();
+  try {
+    const d = window.claude && claude.use ? await claude.use('downloads') : null;
+    if (d) { await d.save({ filename: name, data: text }); say('#pubMsg', 'Saved. Upload this file to GitHub, then share its link.'); return; }
+  } catch (e) { if (e && e.code === 'declined') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/html' })); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  say('#pubMsg', 'Downloaded as ' + name + '. Upload it to GitHub, then share its link. If nothing downloaded, open "Preview" below and copy the code.');
+};
+$('#print').onclick = () => { if (!sched) return; $('#printView').innerHTML = pubBody(false); window.print(); };
 </script>
 </body>
 </html>
