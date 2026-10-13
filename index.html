@@ -207,13 +207,13 @@
       <fieldset>
         <legend class="mb-2 text-sm font-bold">Skill level</legend>
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <label class="choice cursor-pointer"><input class="sr-only" type="radio" name="skill" value="High" required>
+          <label class="choice cursor-pointer"><span class="slots mb-1.5 block text-center text-xs font-bold text-court" data-level="High">–/24 slots</span><input class="sr-only" type="radio" name="skill" value="High" required>
             <span class="block rounded-xl border border-court/25 bg-shuttle px-4 py-3 text-center font-medium transition hover:border-court">High</span>
             <span class="mt-1.5 block text-center text-xs leading-snug text-ink/60">Base player: Michael Saragena / Joy Pasquil</span></label>
-          <label class="choice cursor-pointer"><input class="sr-only" type="radio" name="skill" value="Mid">
+          <label class="choice cursor-pointer"><span class="slots mb-1.5 block text-center text-xs font-bold text-court" data-level="Mid">–/24 slots</span><input class="sr-only" type="radio" name="skill" value="Mid">
             <span class="block rounded-xl border border-court/25 bg-shuttle px-4 py-3 text-center font-medium transition hover:border-court">Mid</span>
             <span class="mt-1.5 block text-center text-xs leading-snug text-ink/60">Base player: Judge Cabasa / Celine Caubanan</span></label>
-          <label class="choice cursor-pointer"><input class="sr-only" type="radio" name="skill" value="Low">
+          <label class="choice cursor-pointer"><span class="slots mb-1.5 block text-center text-xs font-bold text-court" data-level="Low">–/24 slots</span><input class="sr-only" type="radio" name="skill" value="Low">
             <span class="block rounded-xl border border-court/25 bg-shuttle px-4 py-3 text-center font-medium transition hover:border-court">Low</span>
             <span class="mt-1.5 block text-center text-xs leading-snug text-ink/60">Base player: Niño Ortiz / Gelliane Ubagan</span></label>
         </div>
@@ -281,6 +281,22 @@
     }
 
     const ENDPOINT = 'https://script.google.com/macros/s/AKfycby5MjyrpwulfYo1SgcFk_wqFMa2itW7LeFx8dF7kxRy37OlHepJLO1Z35oxxq2zMSCB/exec';
+
+    // Slot counter: approved players per level (from your Google Sheet) out of the slots you set here
+    const SLOT_CAP = { High: 24, Mid: 24, Low: 24 };
+    window.showSlots = function (counts) {
+      document.querySelectorAll('.slots').forEach(function (el) {
+        const l = el.dataset.level, n = counts ? counts[l] : null;
+        el.textContent = counts ? (n || 0) + '/' + SLOT_CAP[l] + ' slots' : '';
+        el.classList.toggle('text-red-700', !!counts && n >= SLOT_CAP[l]);
+      });
+    };
+    (function () {
+      const tag = document.createElement('script');
+      tag.src = ENDPOINT + '?callback=showSlots&t=' + Date.now();
+      tag.onerror = function () { window.showSlots(null); };
+      document.head.appendChild(tag);
+    })();
     const submitBtn = document.getElementById('submitBtn');
     const submitErr = document.getElementById('submitErr');
 
