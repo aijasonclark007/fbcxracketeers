@@ -215,7 +215,7 @@
       <fieldset>
         <legend class="mb-2 text-sm font-bold">Skill level</legend>
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <label class="choice cursor-pointer"><span class="slots mb-1.5 block text-center text-xs font-bold text-court" data-level="High">–/16 slots</span><input class="sr-only" type="radio" name="skill" value="High" required>
+          <label class="choice cursor-pointer"><span class="slots mb-1.5 block text-center text-xs font-bold text-court" data-level="High">–/24 slots</span><input class="sr-only" type="radio" name="skill" value="High" required>
             <span class="block rounded-xl border border-court/25 bg-shuttle px-4 py-3 text-center font-medium transition hover:border-court">High</span>
             <span class="mt-1.5 block text-center text-xs leading-snug text-ink/60">Base player: Michael Saragena / Joy Pasquil</span></label>
           <label class="choice cursor-pointer"><span class="slots mb-1.5 block text-center text-xs font-bold text-court" data-level="Mid">–/32 slots</span><input class="sr-only" type="radio" name="skill" value="Mid">
@@ -292,7 +292,7 @@
     const ENDPOINT = 'https://script.google.com/macros/s/AKfycby5MjyrpwulfYo1SgcFk_wqFMa2itW7LeFx8dF7kxRy37OlHepJLO1Z35oxxq2zMSCB/exec';
 
     // Slot counter: approved players per level (from your Google Sheet) out of the slots you set here
-    const SLOT_CAP = { High: 16, Mid: 32, Low: 24 };
+    const SLOT_CAP = { High: 24, Mid: 32, Low: 24 };
     let slotCounts = null;                                       // approved players per level, once the sheet answers
     const isFull = l => !!slotCounts && (slotCounts[l] || 0) >= SLOT_CAP[l];
     window.showSlots = function (counts) {
