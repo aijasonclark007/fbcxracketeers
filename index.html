@@ -292,11 +292,12 @@
     const ENDPOINT = 'https://script.google.com/macros/s/AKfycby5MjyrpwulfYo1SgcFk_wqFMa2itW7LeFx8dF7kxRy37OlHepJLO1Z35oxxq2zMSCB/exec';
 
     // Slot counter: approved players per level (from your Google Sheet) out of the slots you set here
-    const SLOT_CAP = { High: 24, Mid: 32, Low: 24 };
+    let SLOT_CAP = { High: 24, Mid: 32, Low: 24 };                // fallback; the script sends the real numbers
     let slotCounts = null;                                       // approved players per level, once the sheet answers
     const isFull = l => !!slotCounts && (slotCounts[l] || 0) >= SLOT_CAP[l];
     window.showSlots = function (counts) {
       slotCounts = counts || null;
+      if (counts && counts.cap) SLOT_CAP = counts.cap;
       document.querySelectorAll('.slots').forEach(function (el) {
         const l = el.dataset.level, n = counts ? counts[l] : null;
         el.textContent = counts ? (isFull(l) ? 'Full · waitlist open' : (n || 0) + '/' + SLOT_CAP[l] + ' slots') : '';
@@ -330,7 +331,7 @@
       data.skill = data.skill || '';
       data.name = data.name || ''; data.email = data.email || ''; data.phone = data.phone || '';
       if (!validate(data)) return;
-      const waitlisted = isFull(data.skill);
+      let waitlisted = isFull(data.skill);
 
       submitErr.classList.add('hidden');
       submitBtn.disabled = true;
@@ -340,11 +341,12 @@
         // URL-encoded body is a "simple" request, so the browser skips the CORS preflight that Apps Script can't answer
         const res = await fetch(ENDPOINT, {
           method: 'POST',
-          // a waitlist entry is marked in the name so it is easy to spot in the sheet
+          // older script versions rely on this tag to spot waitlist entries; the new script strips it
           body: new URLSearchParams({ name: data.name.trim() + (waitlisted ? ' [WAITLIST]' : ''), email: data.email.trim(), phone: data.phone.trim(), skill: data.skill, waitlist: waitlisted ? 'yes' : '' })
         });
         const out = await res.json();
         if (out.result !== 'success') throw new Error(out.message || 'Script error');
+        if (typeof out.waitlisted === 'boolean') waitlisted = out.waitlisted;   // the script decides (it checks the sheet itself)
       } catch (err) {
         console.error('Registration failed:', err);
         submitErr.textContent = "Your registration didn't go through (" + (err && err.message ? err.message : err) + "). Check your connection and try again.";
