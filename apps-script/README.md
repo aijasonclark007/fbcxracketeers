@@ -9,7 +9,7 @@ They share one global scope, so keep both in the project.
 | `EmailSystem.gs` | Sends the emails when you change **Status** (column F): Approved, Declined, Move Up, Remind, Waitlist |
 
 ## Waitlist
-- Slots per level are set in `SLOT_CAP` (High 24, Mid 32, Low 24). The website reads them from the script.
+- Slots per level are set in `SLOT_CAP` (High 16, Mid 32, Low 24). The website reads them from the script.
 - A level is full when its **Approved** (and **Remind**) rows reach the cap.
 - A new registration to a full level is saved with Status **Waitlist** and gets a "you're on the waitlist" email automatically.
 - When a slot opens, set that row's Status to **Approved**. The player gets the normal approval email (with the payment link) saying a slot opened up.
