@@ -12,7 +12,7 @@ const HEADERS = ['Timestamp', 'Full Name', 'Email', 'Phone Number', 'Skill Level
 const TOKEN_COL = 8; // H
 
 // Slots per level. The registration page reads these numbers from this script, so this is the only place to change them.
-const SLOT_CAP = { High: 24, Mid: 32, Low: 24 };
+const SLOT_CAP = { High: 16, Mid: 32, Low: 24 };
 const LEVELS = ['High', 'Mid', 'Low'];
 
 // Who gets a short email every time someone registers. Kept out of the code on purpose (this file is public):
@@ -84,7 +84,7 @@ function doGet(e) {
   let body = cache.get('slots2');                // cached for a minute so busy pages stay fast
   if (!body) {
     const out = countApproved_();
-    out.cap = SLOT_CAP;                          // the page shows "x/24 slots" and opens the waitlist from these
+    out.cap = SLOT_CAP;                          // the page shows "x/16 slots" and opens the waitlist from these
     body = JSON.stringify(out);
     cache.put('slots2', body, 60);
   }
