@@ -6,10 +6,22 @@
  * Waitlist: when a level already has its slots filled with approved players, a new registration is saved
  * with Status "Waitlist" and the player gets a waitlist email. Move them to "Approved" when a slot opens
  * and the normal approval email goes out.
+ *
+ * Jersey orders go to their own tab ("Jerseys", made automatically on the first order):
+ *          A Timestamp | B Full Name | C Back Print Name | D Size | E Email
+ *          F Status | G Emailed | H Token | I Payment Proof | J Paid At
  */
 const SHEET_NAME = 'Sheet1';
 const HEADERS = ['Timestamp', 'Full Name', 'Email', 'Phone Number', 'Skill Level'];
 const TOKEN_COL = 8; // H
+
+// Tournament Jersey orders
+const JERSEY_SHEET = 'Jerseys';
+const JERSEY_HEADERS = ['Timestamp', 'Full Name', 'Back Print Name', 'Size', 'Email', 'Status', 'Emailed', 'Token', 'Payment Proof', 'Paid At'];
+const JERSEY_STATUSES = ['Pending', 'Send payment', 'Remind', 'Paid', 'Cancelled'];
+const JERSEY_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+const JERSEY_PRICE = 'PHP 400';
+const JERSEY_CLOSES = new Date('2026-11-02T00:00:00+08:00');   // orders close at the end of November 1, 2026 (Philippine time)
 
 // Slots per level. The registration page reads these numbers from this script, so this is the only place to change them.
 const SLOT_CAP = { High: 16, Mid: 32, Low: 24 };
@@ -28,6 +40,7 @@ function doPost(e) {
     lock.waitLock(10000); // players wait in line so two submissions never write to the same row
     const data = parseBody_(e);
     if (data.action === 'payment') return json_(handlePayment_(data));
+    if (data.action === 'jersey') return json_(handleJersey_(data));
 
     const sheet = getSheet_();
     if (sheet.getLastRow() === 0) {
@@ -108,9 +121,56 @@ function countApproved_() {
   return out;
 }
 
+// ----- Tournament Jersey orders -----
+function jerseySheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(JERSEY_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(JERSEY_SHEET);
+    sheet.getRange(1, 1, 1, JERSEY_HEADERS.length).setValues([JERSEY_HEADERS]).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    sheet.getRange(2, STATUS_COL, 999, 1).setDataValidation(
+      SpreadsheetApp.newDataValidation().requireValueInList(JERSEY_STATUSES, true).setAllowInvalid(false).build());
+  }
+  return sheet;
+}
+
+function handleJersey_(data) {
+  if (new Date() >= JERSEY_CLOSES) throw new Error('Jersey orders are closed.');
+  const name = String(data.name || '').replace(/\s+/g, ' ').trim();
+  const email = String(data.email || '').trim();
+  const size = JERSEY_SIZES.filter(s => s === String(data.size || '').trim().toUpperCase())[0];
+  const back = String(data.back || '').toUpperCase().replace(/[^A-Z\u00D1 .'\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 12);   // always capitals
+  if (name.length < 2) throw new Error('Enter your full name.');
+  if (back.length < 2) throw new Error('Enter the name to print on the back.');
+  if (!size) throw new Error('Choose your size.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Enter a valid email.');
+
+  const sheet = jerseySheet_();
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {          // one order per person: the same name with the same email cannot order twice
+    if (String(rows[i][4]).trim().toLowerCase() === email.toLowerCase() && String(rows[i][1]).trim().toLowerCase() === name.toLowerCase() &&
+        String(rows[i][5]).trim().toLowerCase() !== 'cancelled') throw new Error('This name already has a jersey order for that email.');
+  }
+  const row = sheet.getLastRow() + 1;
+  sheet.getRange(row, 2, 1, 4).setNumberFormat('@');
+  sheet.getRange(row, 1, 1, 5).setValues([[new Date(), name, back, size, email]]);
+  sheet.getRange(row, STATUS_COL).setValue('Pending');
+  try {
+    MailApp.sendEmail({
+      to: notifyEmail_(),
+      name: 'FBC x Racketeers',
+      subject: 'New jersey order: ' + name + ' (' + size + ')',
+      body: 'A new jersey order came in.\n\nName: ' + name + '\nBack print: ' + back + '\nSize: ' + size + '\nEmail: ' + email +
+        '\n\nSet Status to "Send payment" in the Jerseys tab to email the payment link.\n\nSheet: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl()
+    });
+  } catch (err) { /* never blocks the order */ }
+  return { result: 'success' };
+}
+
 // Saves the uploaded screenshot to Drive and links it on the player's row
 function handlePayment_(data) {
-  const sheet = getSheet_();
+  const sheet = data.kind === 'jersey' ? jerseySheet_() : getSheet_();      // jersey payment links carry kind=jersey
   const token = String(data.token || '');
   if (!token) throw new Error('Missing payment code');
   const rows = sheet.getDataRange().getValues();

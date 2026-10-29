@@ -26,6 +26,7 @@ function setupStatusColumn() {
 function onStatusEdit(e) {
   const range = e.range;
   const sheet = range.getSheet();
+  if (sheet.getName() === JERSEY_SHEET) return onJerseyStatusEdit_(range, sheet);     // jersey orders have their own emails
   if (range.getColumn() > STATUS_COL || range.getLastColumn() < STATUS_COL) return;
 
   let skipped = 0;
@@ -152,6 +153,61 @@ function onStatusEdit(e) {
     SpreadsheetApp.getActiveSpreadsheet().toast(
       skipped + ' row(s) skipped: not approved yet, or proof of payment already uploaded.', 'Reminder', 8);
   }
+}
+
+// Jersey orders: Status "Send payment" emails the payment link, "Remind" nudges anyone who has not uploaded proof.
+// Columns: B Name | C Back Print Name | D Size | E Email | F Status | G Emailed | H Token | I Payment Proof
+function onJerseyStatusEdit_(range, sheet) {
+  if (range.getColumn() > STATUS_COL || range.getLastColumn() < STATUS_COL) return;
+  let skipped = 0;
+  for (let row = range.getRow(); row <= range.getLastRow(); row++) {
+    if (row === 1) continue;
+    const [, name, back, size, email, status, emailed, token, proof] = sheet.getRange(row, 1, 1, PROOF_COL).getValues()[0];
+    if (!email) continue;
+    const mark = String(emailed), first = String(name).split(' ')[0];
+    const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+    const details = 'Back print: ' + back + '\nSize: ' + size + '\nPrice: ' + JERSEY_PRICE + ' per jersey';
+    const detailsHtml = '<p><b>Back print:</b> ' + esc_(back) + '<br><b>Size:</b> ' + esc_(size) + '<br><b>Price:</b> ' + JERSEY_PRICE + ' per jersey</p>';
+    try {
+      if (status === 'Send payment' && (mark === '' || mark.startsWith('Failed'))) {
+        const newToken = Utilities.getUuid();
+        sheet.getRange(row, TOKEN_COL).setValue(newToken);
+        const link = PAYMENT_PAGE_URL + '?k=j&t=' + newToken;
+        MailApp.sendEmail({
+          to: email,
+          name: 'FBC x Racketeers',
+          subject: 'Pay for your jersey: FBC x Racketeers Tournament Jersey',
+          body:
+            'Hi ' + first + ',\n\nThank you for ordering the FBC x Racketeers Tournament Jersey.\n\n' + details + '\n\n' +
+            'To confirm your jersey, pay using the QR code on the payment page, then upload a screenshot of your payment.\n\n' +
+            'Pay and upload your payment: ' + link + '\n\nFBC x Racketeers',
+          htmlBody:
+            '<p>Hi ' + esc_(first) + ',</p><p>Thank you for ordering the FBC x Racketeers Tournament Jersey.</p>' + detailsHtml +
+            '<p>To confirm your jersey, pay using the QR code on the payment page, then upload a screenshot of your payment.</p>' +
+            button_(link, 'Click to pay & upload payment') + '<p>FBC x Racketeers</p>'
+        });
+        sheet.getRange(row, EMAILED_COL).setValue(new Date());
+      } else if (status === 'Remind') {
+        if (!token || proof) { skipped++; continue; }
+        const link = PAYMENT_PAGE_URL + '?k=j&t=' + token;
+        MailApp.sendEmail({
+          to: email,
+          name: 'FBC x Racketeers',
+          subject: 'Payment reminder: FBC x Racketeers Tournament Jersey',
+          body:
+            'Hi ' + first + ',\n\nThis is a friendly reminder that we have not received your jersey payment yet.\n\n' + details + '\n\n' +
+            'Pay and upload your payment: ' + link + '\n\nIf you have already paid, please upload your screenshot using the same link.\n\nFBC x Racketeers',
+          htmlBody:
+            '<p>Hi ' + esc_(first) + ',</p><p>This is a friendly reminder that we have not received your jersey payment yet.</p>' + detailsHtml +
+            button_(link, 'Click to pay & upload payment') + '<p>If you have already paid, please upload your screenshot using the same button.</p><p>FBC x Racketeers</p>'
+        });
+        sheet.getRange(row, EMAILED_COL).setValue('Reminded ' + stamp);
+      }
+    } catch (err) {
+      sheet.getRange(row, EMAILED_COL).setValue('Failed: ' + err.message);
+    }
+  }
+  if (skipped) SpreadsheetApp.getActiveSpreadsheet().toast(skipped + ' row(s) skipped: no payment link sent yet, or proof of payment already uploaded.', 'Reminder', 8);
 }
 
 // "You're on the waitlist" email (sent automatically at registration, or when you set Status to Waitlist)
