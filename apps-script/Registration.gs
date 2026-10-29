@@ -7,7 +7,7 @@
  * with Status "Waitlist" and the player gets a waitlist email. Move them to "Approved" when a slot opens
  * and the normal approval email goes out.
  *
- * Jersey orders go to their own tab ("Jerseys", made automatically on the first order):
+ * Jersey orders go to their own tab ("TournamentJersey", made automatically on the first order):
  *          A Timestamp | B Full Name | C Back Print Name | D Size | E Email
  *          F Status | G Emailed | H Token | I Payment Proof | J Paid At
  */
@@ -16,7 +16,7 @@ const HEADERS = ['Timestamp', 'Full Name', 'Email', 'Phone Number', 'Skill Level
 const TOKEN_COL = 8; // H
 
 // Tournament Jersey orders
-const JERSEY_SHEET = 'Jerseys';
+const JERSEY_SHEET = 'TournamentJersey';
 const JERSEY_HEADERS = ['Timestamp', 'Full Name', 'Back Print Name', 'Size', 'Email', 'Status', 'Emailed', 'Token', 'Payment Proof', 'Paid At'];
 const JERSEY_STATUSES = ['Pending', 'Send payment', 'Remind', 'Paid', 'Cancelled'];
 const JERSEY_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
@@ -135,7 +135,7 @@ function jerseySheet_() {
   return sheet;
 }
 
-// Run once from the Apps Script editor to make the Jerseys tab right away (otherwise it appears with the first order)
+// Run once from the Apps Script editor to make the TournamentJersey tab right away (otherwise it appears with the first order)
 function setupJerseySheet() {
   jerseySheet_();
 }
@@ -167,7 +167,7 @@ function handleJersey_(data) {
       name: 'FBC x Racketeers',
       subject: 'New jersey order: ' + name + ' (' + size + ')',
       body: 'A new jersey order came in.\n\nName: ' + name + '\nBack print: ' + back + '\nSize: ' + size + '\nEmail: ' + email +
-        '\n\nSet Status to "Send payment" in the Jerseys tab to email the payment link.\n\nSheet: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl()
+        '\n\nSet Status to "Send payment" in the TournamentJersey tab to email the payment link.\n\nSheet: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl()
     });
   } catch (err) { /* never blocks the order */ }
   return { result: 'success' };
