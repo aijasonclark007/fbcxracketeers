@@ -122,9 +122,14 @@ function countApproved_() {
 }
 
 // ----- Tournament Jersey orders -----
+// The jersey tab may be named TournamentJersey, TournamentJerseys, Jersey or Jerseys (capitals and spaces do not matter)
+function isJerseySheetName_(name) {
+  return ['tournamentjersey', 'tournamentjerseys', 'jersey', 'jerseys'].indexOf(String(name).toLowerCase().replace(/\s+/g, '')) >= 0;
+}
+
 function jerseySheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(JERSEY_SHEET);
+  let sheet = ss.getSheets().filter(s => isJerseySheetName_(s.getName()))[0];
   if (!sheet) {
     sheet = ss.insertSheet(JERSEY_SHEET);
     sheet.getRange(1, 1, 1, JERSEY_HEADERS.length).setValues([JERSEY_HEADERS]).setFontWeight('bold');
