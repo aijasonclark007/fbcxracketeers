@@ -28,6 +28,25 @@
       }
     }
   </script>
+  <style>
+    #zoomFig { position: relative; cursor: zoom-in; -webkit-tap-highlight-color: transparent; }
+    #zoomImg { transition: transform .35s cubic-bezier(.22,.61,.36,1); will-change: transform; }
+    #zoomFig.hot #zoomImg { transform: scale(2); transition-duration: .25s; }
+    #zoomHint { transition: opacity .25s ease, transform .25s ease; }
+    #zoomFig.hot #zoomHint { opacity: 0; transform: translateY(6px); }
+    #lb { position: fixed; inset: 0; z-index: 60; background: rgba(6,26,51,.94); opacity: 0; visibility: hidden; transition: opacity .28s ease, visibility 0s linear .28s; }
+    #lb.on { opacity: 1; visibility: visible; transition: opacity .28s ease; }
+    #lbScroll { position: absolute; inset: 0; overflow: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y pinch-zoom; display: flex; }
+    #lbImg { margin: auto; width: 100%; max-width: none; height: auto; flex: none; transform: scale(.96); transition: transform .3s cubic-bezier(.22,.61,.36,1), width .3s cubic-bezier(.22,.61,.36,1); cursor: zoom-in; }
+    #lb.on #lbImg { transform: scale(1); }
+    #lb.big #lbImg { width: 260%; cursor: zoom-out; }
+    @media (min-width: 768px) { #lbImg { width: auto; max-width: 92vw; max-height: 92vh; } #lb.big #lbImg { width: 200%; max-width: none; max-height: none; } }
+    #lbClose, #lbTip { position: absolute; z-index: 2; transition: opacity .25s ease, transform .15s ease; }
+    #lbClose { top: 16px; right: 16px; }
+    #lbTip { bottom: 20px; left: 50%; transform: translateX(-50%); }
+    #lbClose:active { transform: scale(.92); }
+    @media (prefers-reduced-motion: reduce) { #zoomImg, #lbImg, #lb { transition: none !important; } }
+  </style>
 </head>
 <body class="flex min-h-screen flex-col bg-shuttle font-sans text-ink antialiased">
 
@@ -43,9 +62,15 @@
     <p class="mt-2 max-w-2xl text-ink/70">Get the official FBC x Racketeers jersey with your name printed on the back. Anyone can order, one jersey per order.</p>
 
     <div class="mt-8 grid items-start gap-8 md:grid-cols-[1.25fr_1fr]">
-      <figure class="overflow-hidden rounded-3xl border border-court/15 bg-white shadow-sm">
-        <img src="jersey.jpg" width="1600" height="1185" alt="FBC x Racketeers jersey, front with the club crest and back with the club logos and a printed name" class="block h-auto w-full">
+      <figure id="zoomFig" class="overflow-hidden rounded-3xl border border-court/15 bg-white shadow-sm" role="button" tabindex="0" aria-label="Zoom in on the jersey picture">
+        <img id="zoomImg" src="jersey.jpg" width="1600" height="1185" alt="FBC x Racketeers jersey, front with the club crest and back with the club logos and a printed name" class="block h-auto w-full">
+        <span id="zoomHint" class="pointer-events-none absolute bottom-3 right-3 rounded-full bg-court-dark/80 px-3 py-1 text-xs font-bold text-shuttle"><span class="hidden [@media(hover:hover)]:inline">Hover to zoom, click to enlarge</span><span class="[@media(hover:hover)]:hidden">Tap to zoom</span></span>
       </figure>
+      <div id="lb" role="dialog" aria-modal="true" aria-label="Jersey picture" aria-hidden="true">
+        <div id="lbScroll"><img id="lbImg" src="jersey.jpg" alt="FBC x Racketeers jersey, enlarged"></div>
+        <button id="lbClose" type="button" aria-label="Close" class="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white">&times;</button>
+        <p id="lbTip" class="pointer-events-none rounded-full bg-white/15 px-4 py-1.5 text-xs font-bold text-white">Tap the picture to zoom, pinch to zoom more</p>
+      </div>
 
       <div>
         <section class="rounded-3xl border border-court/15 bg-white p-6 shadow-sm">
@@ -149,6 +174,34 @@
       $('doneBack').textContent = d.back; $('doneSize').textContent = d.size;
       $('done').classList.remove('hidden'); $('done').focus(); $('done').scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
+  </script>
+  <script>
+    (function () {   // jersey picture zoom: hover on desktop, tap to enlarge on phones
+      const fig = document.getElementById('zoomFig'), img = document.getElementById('zoomImg');
+      const lb = document.getElementById('lb'), lbScroll = document.getElementById('lbScroll');
+      const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      if (canHover) {
+        fig.addEventListener('mouseenter', () => fig.classList.add('hot'));
+        fig.addEventListener('mouseleave', () => { fig.classList.remove('hot'); img.style.transformOrigin = '50% 50%'; });
+        fig.addEventListener('mousemove', e => {
+          const r = fig.getBoundingClientRect();
+          img.style.transformOrigin = ((e.clientX - r.left) / r.width * 100) + '% ' + ((e.clientY - r.top) / r.height * 100) + '%';
+        });
+      }
+      const openLb = () => { lb.classList.remove('big'); lb.classList.add('on'); lb.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden'; lbScroll.scrollTo(0, 0); setTimeout(() => document.getElementById('lbTip').style.opacity = '0', 3200); document.getElementById('lbTip').style.opacity = '1'; };
+      const closeLb = () => { lb.classList.remove('on', 'big'); lb.setAttribute('aria-hidden', 'true'); document.body.style.overflow = ''; };
+      fig.addEventListener('click', openLb);
+      fig.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLb(); } });
+      document.getElementById('lbClose').addEventListener('click', closeLb);
+      document.getElementById('lbImg').addEventListener('click', e => {
+        const wasBig = lb.classList.contains('big'), i = e.currentTarget;
+        const r = i.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+        lb.classList.toggle('big', !wasBig);
+        if (!wasBig) setTimeout(() => { lbScroll.scrollTo({ left: fx * i.offsetWidth - lbScroll.clientWidth / 2, top: fy * i.offsetHeight - lbScroll.clientHeight / 2, behavior: 'smooth' }); }, 20);
+      });
+      lbScroll.addEventListener('click', e => { if (e.target === lbScroll) closeLb(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && lb.classList.contains('on')) closeLb(); });
+    })();
   </script>
 </body>
 </html>
