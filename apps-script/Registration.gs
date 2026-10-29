@@ -135,6 +135,11 @@ function jerseySheet_() {
   return sheet;
 }
 
+// Run once from the Apps Script editor to make the Jerseys tab right away (otherwise it appears with the first order)
+function setupJerseySheet() {
+  jerseySheet_();
+}
+
 function handleJersey_(data) {
   if (new Date() >= JERSEY_CLOSES) throw new Error('Jersey orders are closed.');
   const name = String(data.name || '').replace(/\s+/g, ' ').trim();

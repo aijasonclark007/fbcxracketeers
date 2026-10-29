@@ -15,7 +15,7 @@ They share one global scope, so keep both in the project.
 - When a slot opens, set that row's Status to **Approved**. The player gets the normal approval email (with the payment link) saying a slot opened up.
 
 ## Tournament Jersey orders
-- The jersey page (`jersey.html`) saves each order to a **Jerseys** tab in the same Google Sheet. The tab is created automatically on the first order.
+- The jersey page (`jersey.html`) saves each order to a **Jerseys** tab in the same Google Sheet. The tab is created automatically on the first order, or right away if you run `setupJerseySheet()` once from the Apps Script editor.
 - Columns: Timestamp, Full Name, Back Print Name (always capitals, up to 12 characters), Size, Email, Status, Emailed, Token, Payment Proof, Paid At.
 - Orders close at the end of November 1, 2026 (Philippine time). Change `JERSEY_CLOSES` in `Registration.gs` to move the date, and the date in `jersey.html`.
 - The price is `JERSEY_PRICE` in `Registration.gs` (the payment page shows 400 in `payment.html`).
