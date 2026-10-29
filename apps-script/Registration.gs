@@ -125,8 +125,9 @@ function countApproved_() {
 function jerseySheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(JERSEY_SHEET);
-  if (!sheet) {
-    sheet = ss.insertSheet(JERSEY_SHEET);
+  if (!sheet) sheet = ss.insertSheet(JERSEY_SHEET);
+  if (String(sheet.getRange(1, 1).getValue()).trim() !== JERSEY_HEADERS[0]) {   // no header row yet (new or empty tab): add it above any existing rows
+    if (sheet.getLastRow() > 0) sheet.insertRowBefore(1);
     sheet.getRange(1, 1, 1, JERSEY_HEADERS.length).setValues([JERSEY_HEADERS]).setFontWeight('bold');
     sheet.setFrozenRows(1);
     sheet.getRange(2, STATUS_COL, 999, 1).setDataValidation(
