@@ -7,7 +7,7 @@
  * with Status "Waitlist" and the player gets a waitlist email. Move them to "Approved" when a slot opens
  * and the normal approval email goes out.
  *
- * Jersey orders go to their own tab ("Jerseys", made automatically on the first order):
+ * Jersey orders go to their own tab ("TournamentJersey", made automatically on the first order):
  *          A Timestamp | B Full Name | C Back Print Name | D Size | E Email
  *          F Status | G Emailed | H Token | I Payment Proof | J Paid At
  */
@@ -16,7 +16,7 @@ const HEADERS = ['Timestamp', 'Full Name', 'Email', 'Phone Number', 'Skill Level
 const TOKEN_COL = 8; // H
 
 // Tournament Jersey orders
-const JERSEY_SHEET = 'Jerseys';
+const JERSEY_SHEET = 'TournamentJersey';
 const JERSEY_HEADERS = ['Timestamp', 'Full Name', 'Back Print Name', 'Size', 'Email', 'Status', 'Emailed', 'Token', 'Payment Proof', 'Paid At'];
 const JERSEY_STATUSES = ['Pending', 'Send payment', 'Remind', 'Paid', 'Cancelled'];
 const JERSEY_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
@@ -122,9 +122,14 @@ function countApproved_() {
 }
 
 // ----- Tournament Jersey orders -----
+// The jersey tab may be named TournamentJersey, TournamentJerseys, Jersey or Jerseys (capitals and spaces do not matter)
+function isJerseySheetName_(name) {
+  return ['tournamentjersey', 'tournamentjerseys', 'jersey', 'jerseys'].indexOf(String(name).toLowerCase().replace(/\s+/g, '')) >= 0;
+}
+
 function jerseySheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(JERSEY_SHEET);
+  let sheet = ss.getSheets().filter(s => isJerseySheetName_(s.getName()))[0];
   if (!sheet) sheet = ss.insertSheet(JERSEY_SHEET);
   if (String(sheet.getRange(1, 1).getValue()).trim() !== JERSEY_HEADERS[0]) {   // no header row yet (new or empty tab): add it above any existing rows
     if (sheet.getLastRow() > 0) sheet.insertRowBefore(1);
@@ -134,6 +139,11 @@ function jerseySheet_() {
       SpreadsheetApp.newDataValidation().requireValueInList(JERSEY_STATUSES, true).setAllowInvalid(false).build());
   }
   return sheet;
+}
+
+// Run once from the Apps Script editor to make the TournamentJersey tab right away (otherwise it appears with the first order)
+function setupJerseySheet() {
+  jerseySheet_();
 }
 
 function handleJersey_(data) {
@@ -163,7 +173,7 @@ function handleJersey_(data) {
       name: 'FBC x Racketeers',
       subject: 'New jersey order: ' + name + ' (' + size + ')',
       body: 'A new jersey order came in.\n\nName: ' + name + '\nBack print: ' + back + '\nSize: ' + size + '\nEmail: ' + email +
-        '\n\nSet Status to "Send payment" in the Jerseys tab to email the payment link.\n\nSheet: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl()
+        '\n\nSet Status to "Send payment" in the TournamentJersey tab to email the payment link.\n\nSheet: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl()
     });
   } catch (err) { /* never blocks the order */ }
   return { result: 'success' };
@@ -190,6 +200,20 @@ function handlePayment_(data) {
 
   sheet.getRange(row, 9).setValue(file.getUrl());
   sheet.getRange(row, 10).setValue(new Date());
+
+  // Tell the organizer right away that a payment screenshot came in
+  try {
+    const who = String(rows[row - 1][1]), isJ = data.kind === 'jersey';
+    MailApp.sendEmail({
+      to: notifyEmail_(),
+      name: 'FBC x Racketeers',
+      subject: 'Payment received: ' + who + (isJ ? ' (jersey)' : ' (tournament)'),
+      body: who + ' just uploaded a payment screenshot for the ' + (isJ ? 'Tournament Jersey' : 'Tournament entry') + '.\n\n' +
+        'Screenshot: ' + file.getUrl() + '\n' +
+        'Open the sheet and check the payment' + (isJ ? ', then set Status to Paid.' : '.') + '\n\n' +
+        'Sheet: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl()
+    });
+  } catch (err) { /* never blocks the upload */ }
   return { result: 'success' };
 }
 

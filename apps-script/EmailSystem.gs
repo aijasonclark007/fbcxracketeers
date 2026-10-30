@@ -26,7 +26,7 @@ function setupStatusColumn() {
 function onStatusEdit(e) {
   const range = e.range;
   const sheet = range.getSheet();
-  if (sheet.getName() === JERSEY_SHEET) return onJerseyStatusEdit_(range, sheet);     // jersey orders have their own emails
+  if (isJerseySheetName_(sheet.getName())) return onJerseyStatusEdit_(range, sheet);     // jersey orders have their own emails
   if (range.getColumn() > STATUS_COL || range.getLastColumn() < STATUS_COL) return;
 
   let skipped = 0;
