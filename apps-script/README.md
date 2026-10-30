@@ -15,11 +15,12 @@ They share one global scope, so keep both in the project.
 - When a slot opens, set that row's Status to **Approved**. The player gets the normal approval email (with the payment link) saying a slot opened up.
 
 ## Tournament Jersey orders
-- The jersey page (`jersey.html`) saves each order to a **Jerseys** tab in the same Google Sheet. The tab is created automatically on the first order.
+- The jersey page (`jersey.html`) saves each order to a **TournamentJersey** tab in the same Google Sheet. The tab is created automatically on the first order, or right away if you run `setupJerseySheet()` once from the Apps Script editor.
 - Columns: Timestamp, Full Name, Back Print Name (always capitals, up to 12 characters), Size, Email, Status, Emailed, Token, Payment Proof, Paid At.
 - Orders close at the end of November 1, 2026 (Philippine time). Change `JERSEY_CLOSES` in `Registration.gs` to move the date, and the date in `jersey.html`.
 - The price is `JERSEY_PRICE` in `Registration.gs` (the payment page shows 400 in `payment.html`).
-- Set **Status** in the Jerseys tab: **Send payment** emails the payment link (the existing payment page with `?k=j`), **Remind** nudges anyone who has not uploaded a screenshot, **Paid** and **Cancelled** send nothing.
+- New orders are set to **Send payment** automatically, so the customer gets the payment link right after ordering (no manual step). If the email fails, the Emailed column says why and you can set Status to Send payment again.
+- Status choices: **Send payment** emails the payment link (the existing payment page with `?k=j`), **Remind** nudges anyone who has not uploaded a screenshot, **Paid** and **Cancelled** send nothing.
 - The same name with the same email cannot order twice. You get an email for every new order, like new registrations.
 - After pasting both files, deploy a **new version** (see below). No other setup is needed.
 
