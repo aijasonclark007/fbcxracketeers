@@ -142,13 +142,36 @@
     back.addEventListener('input', cleanBack);
 
     function setError(el, msg) { const p = el.closest('div').querySelector('.err'); p.textContent = msg; p.classList.toggle('hidden', !msg); }
+    // Email check: proper format, plus a "did you mean ...?" catch for common typos like gmail.co
+    const EMAIL_RE = /^[A-Za-z0-9._%+\-]+@(?:[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/;
+    const DOMAIN_FIX = { 'gmail.co': 'gmail.com', 'gmail.con': 'gmail.com', 'gmail.cm': 'gmail.com', 'gmail.comm': 'gmail.com', 'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmil.com': 'gmail.com', 'gmaill.com': 'gmail.com', 'gamil.com': 'gmail.com',
+      'yahoo.co': 'yahoo.com', 'yahoo.con': 'yahoo.com', 'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'hotmail.co': 'hotmail.com', 'hotmail.con': 'hotmail.com', 'hotmial.com': 'hotmail.com',
+      'outlook.co': 'outlook.com', 'outlok.com': 'outlook.com', 'icloud.co': 'icloud.com', 'icloud.con': 'icloud.com' };
+    function emailProblem(v) {
+      v = String(v || '').trim();
+      if (!EMAIL_RE.test(v) || /\.\./.test(v) || /^\./.test(v) || /\.@/.test(v)) return { msg: 'Enter a valid email, like you@example.com.' };
+      const at = v.lastIndexOf('@'), fix = DOMAIN_FIX[v.slice(at + 1).toLowerCase()];
+      if (fix) return { msg: 'Is that right? Did you mean ' + v.slice(0, at + 1) + fix + '?', fix: v.slice(0, at + 1) + fix };
+      return null;
+    }
+    function offerEmailFix(input, fix) {   // adds a "Use it" button under the field
+      const p = input.closest('div').querySelector('.err');
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = 'Use ' + fix;
+      b.className = 'ml-2 rounded-full bg-court px-3 py-1 text-xs font-bold text-white transition duration-200 hover:bg-court-light active:scale-95';
+      b.addEventListener('click', () => { input.value = fix; p.classList.add('hidden'); p.textContent = ''; });
+      p.appendChild(b);
+    }
+
     function validate(d) {
       let ok = true;
       const check = (name, bad, msg) => { setError(form.elements[name], bad ? msg : ''); if (bad) ok = false; };
       check('name', d.name.trim().length < 2, 'Enter your full name.');
       check('back', d.back.trim().length < 2, 'Enter the name to print on the back (2 to 12 letters).');
       check('size', !d.size, 'Choose your size.');
-      check('email', !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email), 'Enter a valid email, like you@example.com.');
+      const ep = emailProblem(d.email);
+      check('email', !!ep, ep ? ep.msg : '');
+      if (ep && ep.fix) offerEmailFix(form.elements.email, ep.fix);
       return ok;
     }
 
