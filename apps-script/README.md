@@ -15,11 +15,11 @@ They share one global scope, so keep both in the project.
 - When a slot opens, set that row's Status to **Approved**. The player gets the normal approval email (with the payment link) saying a slot opened up.
 
 ## Tournament Jersey orders
-- The jersey page (`jersey.html`) saves each order to a **Jerseys** tab in the same Google Sheet. The tab is created automatically on the first order.
+- The jersey page (`jersey.html`) saves each order to a **TournamentJersey** tab in the same Google Sheet. The tab is created automatically on the first order, or right away if you run `setupJerseySheet()` once from the Apps Script editor.
 - Columns: Timestamp, Full Name, Back Print Name (always capitals, up to 12 characters), Size, Email, Status, Emailed, Token, Payment Proof, Paid At.
 - Orders close at the end of November 1, 2026 (Philippine time). Change `JERSEY_CLOSES` in `Registration.gs` to move the date, and the date in `jersey.html`.
 - The price is `JERSEY_PRICE` in `Registration.gs` (the payment page shows 400 in `payment.html`).
-- Set **Status** in the Jerseys tab: **Send payment** emails the payment link (the existing payment page with `?k=j`), **Remind** nudges anyone who has not uploaded a screenshot, **Paid** and **Cancelled** send nothing.
+- Set **Status** in the TournamentJersey tab: **Send payment** emails the payment link (the existing payment page with `?k=j`), **Remind** nudges anyone who has not uploaded a screenshot, **Paid** and **Cancelled** send nothing.
 - The same name with the same email cannot order twice. You get an email for every new order, like new registrations.
 - After pasting both files, deploy a **new version** (see below). No other setup is needed.
 
@@ -31,3 +31,6 @@ If it is not set, alerts go to the account that owns the script.
 1. Paste both files over the old ones and save.
 2. Run `setupStatusColumn()` once (adds "Waitlist" to the Status dropdown).
 3. Deploy > Manage deployments > pencil icon > Version: **New version** > Deploy. (Same web app URL, so the site keeps working.)
+
+## Payment alerts
+- Whenever a player or jersey buyer uploads a payment screenshot, you get an email (to the same address as new-registration alerts) with the screenshot link and the sheet link, so you can check it and set Status.
