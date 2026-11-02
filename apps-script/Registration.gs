@@ -21,7 +21,7 @@ const JERSEY_HEADERS = ['Timestamp', 'Full Name', 'Back Print Name', 'Size', 'Em
 const JERSEY_STATUSES = ['Pending', 'Send payment', 'Remind', 'Paid', 'Cancelled'];
 const JERSEY_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
 const JERSEY_PRICE = 'PHP 400';
-const JERSEY_CLOSES = new Date('2026-11-02T00:00:00+08:00');   // orders close at the end of November 1, 2026 (Philippine time)
+const JERSEY_CLOSES = new Date('2026-11-03T00:00:00+08:00');   // orders close at the end of November 2, 2026 (Philippine time)
 
 // Slots per level. The registration page reads these numbers from this script, so this is the only place to change them.
 const SLOT_CAP = { High: 16, Mid: 32, Low: 24 };
