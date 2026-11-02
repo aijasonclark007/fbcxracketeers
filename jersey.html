@@ -186,9 +186,10 @@
         // URL-encoded body is a "simple" request, so the browser skips the CORS preflight that Apps Script can't answer
         const res = await fetch(ENDPOINT, { method: 'POST', body: new URLSearchParams({ action: 'jersey', name: d.name.trim(), back: d.back, size: d.size, email: d.email }) });
         const out = await res.json();
-        if (out.result !== 'success') throw new Error(out.message || 'Script error');
+        if (out.result !== 'success') { const se = new Error(out.message || 'Script error'); se.fromServer = !!out.message; throw se; }
       } catch (ex) {
-        err.textContent = "Your order didn't go through (" + (ex && ex.message ? ex.message : ex) + "). Check your connection and try again.";
+        const why = ex && ex.message ? ex.message : String(ex);
+        err.textContent = ex && ex.fromServer ? "Your order didn't go through. " + why.replace(/\.$/, '') + '.' : "Your order didn't go through (" + why + "). Check your connection and try again.";
         err.classList.remove('hidden'); btn.disabled = false; btn.textContent = 'Order my jersey';
         return;
       }
