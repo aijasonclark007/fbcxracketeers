@@ -76,7 +76,7 @@
         <section class="rounded-3xl border border-court/15 bg-white p-6 shadow-sm">
           <div class="flex flex-wrap items-baseline justify-between gap-2">
             <p class="font-display text-3xl font-extrabold">&#8369;400 <span class="text-base font-semibold text-ink/60">/ jersey</span></p>
-            <p id="deadlinePill" class="rounded-full border border-neon bg-neon/15 px-4 py-1 text-sm font-bold text-court">Order and pay before November 2, 2026</p>
+            <p id="deadlinePill" class="rounded-full border border-neon bg-neon/15 px-4 py-1 text-sm font-bold text-court">Order and pay before December 1, 2026</p>
           </div>
           <p class="mt-2 text-sm text-ink/70">After you order, we email you a payment link. Your jersey is confirmed once your payment is received.</p>
         </section>
@@ -113,7 +113,7 @@
 
         <section id="closed" class="mt-6 hidden rounded-3xl bg-court-dark p-6 text-center text-shuttle" role="status">
           <h2 class="font-display text-2xl font-extrabold">Jersey orders are closed</h2>
-          <p class="mt-2 text-shuttle/85">The last day to order was November 2, 2026.</p>
+          <p class="mt-2 text-shuttle/85">The last day to order was December 1, 2026.</p>
         </section>
 
         <section id="done" class="mt-6 hidden rounded-3xl bg-court p-8 text-center text-shuttle" role="status" tabindex="-1">
@@ -131,7 +131,7 @@
 
   <script>
     const ENDPOINT = 'https://script.google.com/macros/s/AKfycby5MjyrpwulfYo1SgcFk_wqFMa2itW7LeFx8dF7kxRy37OlHepJLO1Z35oxxq2zMSCB/exec';
-    const DEADLINE = new Date('2026-11-03T00:00:00+08:00').getTime();   // orders close at the end of November 2, Philippine time
+    const DEADLINE = new Date('2026-12-02T00:00:00+08:00').getTime();   // orders close at the end of December 1, Philippine time
     const $ = id => document.getElementById(id), form = $('jerseyForm');
     $('yr').textContent = new Date().getFullYear();
     if (Date.now() >= DEADLINE) { form.classList.add('hidden'); $('closed').classList.remove('hidden'); $('deadlinePill').textContent = 'Orders closed'; }

@@ -17,7 +17,7 @@ They share one global scope, so keep both in the project.
 ## Tournament Jersey orders
 - The jersey page (`jersey.html`) saves each order to a **TournamentJersey** tab in the same Google Sheet. The tab is created automatically on the first order, or right away if you run `setupJerseySheet()` once from the Apps Script editor.
 - Columns: Timestamp, Full Name, Back Print Name (always capitals, up to 12 characters), Size, Email, Status, Emailed, Token, Payment Proof, Paid At.
-- Orders close at the end of November 2, 2026 (Philippine time). Change `JERSEY_CLOSES` in `Registration.gs` to move the date, and the date in `jersey.html`.
+- Orders close at the end of December 1, 2026 (Philippine time). Change `JERSEY_CLOSES` in `Registration.gs` to move the date, and the date in `jersey.html`.
 - The price is `JERSEY_PRICE` in `Registration.gs` (the payment page shows 400 in `payment.html`).
 - Set **Status** in the TournamentJersey tab: **Send payment** emails the payment link (the existing payment page with `?k=j`), **Remind** nudges anyone who has not uploaded a screenshot, **Paid** and **Cancelled** send nothing.
 - The same name with the same email cannot order twice. You get an email for every new order, like new registrations.
